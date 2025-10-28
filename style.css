@@ -467,6 +467,109 @@ footer {
     }
 }
 
+/* 全局点击计数器样式 */
+.counter-container {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 15px 20px;
+    margin-bottom: 25px;
+    border-left: 4px solid #fd2d5c;
+    border-right: 4px solid #fd2d5c;
+    color: #ffffff;
+    font-family: monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.counter-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(253, 45, 92, 0.1), transparent);
+    pointer-events: none;
+}
+
+.counter-description {
+    font-size: 0.9em;
+    opacity: 0.7;
+    margin-top: 5px;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
+#global-click-counter {
+    color: #fd2d5c;
+    font-weight: bold;
+    font-size: 1.4em;
+    transition: all 0.2s ease;
+    text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
+}
+
+/* 点击按钮样式 */
+.click-button {
+    background-color: #fd2d5c;
+    color: #000000;
+    border: 2px solid #ffffff;
+    padding: 10px 20px;
+    margin: 10px 0;
+    font-family: monospace;
+    font-size: 1em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.click-button:hover {
+    background-color: #ffffff;
+    color: #fd2d5c;
+    border-color: #fd2d5c;
+    transform: scale(1.05);
+}
+
+.click-button:active {
+    transform: scale(0.95);
+}
+
+/* 计数器闪烁效果 - 故障风格 */
+.counter-flash {
+    animation: counterGlitch 0.3s ease-in-out;
+}
+
+@keyframes counterGlitch {
+    0%, 100% {
+        color: #fd2d5c;
+        text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
+        transform: translateX(0);
+    }
+    20% {
+        color: #ffffff;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        transform: translateX(-2px);
+    }
+    40% {
+        color: #fd2d5c;
+        text-shadow: 0 0 8px rgba(253, 45, 92, 0.8);
+        transform: translateX(2px);
+    }
+    60% {
+        color: #ffffff;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        transform: translateX(-1px);
+    }
+    80% {
+        color: #fd2d5c;
+        text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
+        transform: translateX(1px);
+    }
+}
+
 /* 干扰效果 */
 .interference {
     position: fixed;

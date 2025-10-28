@@ -1,4 +1,97 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 全局点击计数功能 - API实现
+    const counterElement = document.getElementById('global-click-counter');
+    const clickButton = document.getElementById('click-button');
+    const apiKey = '6c18b0cafb24205829af9e2fb75c3a2a';
+    const counterId = '6200f7021fe890c7f925ff27cf10cabd';
+    
+    // 获取当前计数值 - 修复显示异常问题
+    function getCount() {
+        const url = 'https://js.ruseo.cn/api/counter.php?api_key=' + apiKey + '&action=get&counter_id=' + counterId;
+        
+        // 使用fetch API，设置无缓存
+        fetch(url, {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络响应异常');
+            }
+            return response.text();
+        })
+        .then(text => {
+            console.log('API响应:', text);
+            // 清理响应文本，只保留数字部分
+            const cleanText = text.replace(/[^0-9]/g, '');
+            // 确保只解析有效的数字
+            if (cleanText && cleanText.length < 15) { // 限制长度，防止异常大的数字
+                const count = parseInt(cleanText);
+                if (!isNaN(count)) {
+                    counterElement.textContent = count.toLocaleString();
+                    return;
+                }
+            }
+            // 如果解析失败，显示合理的默认值
+            counterElement.textContent = '0';
+        })
+        .catch(error => {
+            console.error('获取计数失败:', error);
+            // 错误情况下显示加载中
+            counterElement.textContent = '加载中...';
+        });
+    }
+    
+    // 增加计数
+    function incrementCount() {
+        const url = 'https://js.ruseo.cn/api/counter.php?api_key=' + apiKey + '&action=increment&counter_id=' + counterId + '&value=1';
+        
+        // 禁用按钮防止重复点击
+        clickButton.disabled = true;
+        
+        // 立即提供本地反馈，但不修改实际显示的数字
+        counterElement.classList.add('counter-flash');
+        setTimeout(() => counterElement.classList.remove('counter-flash'), 300);
+        
+        // 发送请求到API
+        fetch(url, {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+                'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        })
+        .then(() => {
+            console.log('计数已增加');
+            // 请求成功后获取最新计数值
+            getCount();
+        })
+        .catch(error => {
+            console.error('增加计数失败:', error);
+        })
+        .finally(() => {
+            // 无论成功失败，都重新启用按钮
+            setTimeout(() => {
+                clickButton.disabled = false;
+            }, 500);
+        });
+    }
+    
+    // 初始加载计数
+    getCount();
+    
+    // 只添加按钮的点击事件
+    clickButton.addEventListener('click', incrementCount);
+    
+    // 自动刷新计数
+    setInterval(getCount, 5000);
     // 添加干扰层
     const interference = document.createElement('div');
     interference.className = 'interference';
