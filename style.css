@@ -1,0 +1,481 @@
+/* 复古计算机风格 */
+@font-face {
+    font-family: 'Pixel';
+    src: local('Courier New'), local('MS Gothic');
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Pixel', monospace;
+    background-color: #000;
+    color: #fff;
+    line-height: 1.6;
+    background-image: none;
+    position: relative;
+    overflow-x: hidden;
+    padding: 0;
+    margin: 40px 0; /* 添加上下外边距，露出扫描线背景 */
+    cursor: none;
+}
+
+/* 扫描线效果 - 调整为纯水平线条，确保没有三角形效果 */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg, /* 明确指定为0度，确保是水平方向 */
+        transparent 0px,
+        rgba(253, 45, 92, 0.3) 1px,
+        transparent 2px
+    );
+    background-size: 100% 1px; /* 增大扫描线间隔为3px */
+    background-position: 0 0;
+    pointer-events: none;
+    z-index: 99;
+}
+
+/* 蓝移线效果 - 优化消除边界 */
+body::before {
+    content: '';
+    position: fixed;
+    top: -200%; /* 大幅超出可视区域上方，确保无边界可见 */
+    left: 0;
+    width: 100%;
+    height: 400%; /* 大幅增加高度，确保无边界可见 */
+    background: repeating-linear-gradient(
+        0deg, /* 明确指定为0度，确保是水平方向 */
+        transparent 0px,
+        rgba(0, 225, 255, 0.5) 1px,
+        transparent 2px
+    );
+    background-size: 100% 3px; /* 增大扫描线间隔为3px */
+    background-repeat: repeat-y; /* 确保垂直方向重复 */
+    background-attachment: fixed; /* 固定背景位置 */
+    opacity: 0.7;
+    pointer-events: none;
+    z-index: 98;
+    animation: blueShift 24s linear infinite; /* 减慢速度 */
+}
+
+/* 红移线效果 - 优化消除边界 */
+.red-shift {
+    position: fixed;
+    bottom: -200%; /* 大幅超出可视区域下方，确保无边界可见 */
+    left: 0;
+    width: 100%;
+    height: 400%; /* 大幅增加高度，确保无边界可见 */
+    background: repeating-linear-gradient(
+        0deg, /* 明确指定为0度，确保是水平方向 */
+        transparent 0px,
+        rgba(255, 0, 60, 0.5) 1px,
+        transparent 2px
+    );
+    background-size: 100% 3px; /* 增大扫描线间隔为3px */
+    background-repeat: repeat-y; /* 确保垂直方向重复 */
+    background-attachment: fixed; /* 固定背景位置 */
+    opacity: 0.6;
+    pointer-events: none;
+    z-index: 97;
+    animation: redShift 100s linear infinite; /* 减慢速度 */
+}
+
+@keyframes blueShift {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(50%); /* 移动距离与元素高度匹配，确保平滑过渡无边界 */
+    }
+}
+
+@keyframes redShift {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(-50%); /* 移动距离与元素高度匹配，确保平滑过渡无边界 */
+    }
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px 20px; /* 减少上下内边距 */
+    position: relative;
+    background-color: #000;
+    border: 1px solid #fd2d5c;
+    box-shadow: 0 0 20px rgba(253, 45, 92, 0.2);
+    z-index: 101; /* 确保内容在扫描线之上 */
+}
+
+/* 选中文字样式 */
+::selection {
+    background-color: #fd2d5c;
+    color: #fff;
+}
+
+/* Firefox 兼容 */
+::-moz-selection {
+    background-color: #fd2d5c;
+    color: #fff;
+}
+
+header {
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 30px;
+    color: #fd2d5c;
+    /* 静态故障效果 - 使用多重文字阴影创建彩色故障感 */
+    text-shadow: 
+        0 0 5px #fd2d5c,
+        2px 0 0 rgba(255, 0, 0, 0.75),
+        -2px 0 0 rgba(0, 255, 255, 0.75),
+        0 2px 0 rgba(255, 0, 0, 0.5),
+        0 -2px 0 rgba(0, 255, 255, 0.5);
+    /* 添加间歇性抖动效果 - 每隔几秒抖动一次 */
+    animation: intermittentShake 3s infinite ease-in-out;
+}
+
+/* 间歇性抖动动画 - 大部分时间静止，偶尔抖动 */
+@keyframes intermittentShake {
+    /* 大部分时间保持静止（约2.8秒） */
+    0%, 93%, 100% {
+        transform: translateX(0);
+    }
+    /* 快速抖动效果（约0.2秒） */
+    94% {
+        transform: translateX(-1px);
+    }
+    95% {
+        transform: translateX(1px);
+    }
+    96% {
+        transform: translateX(-1px);
+    }
+    97% {
+        transform: translateX(1px);
+    }
+    98% {
+        transform: translateX(-0.5px);
+    }
+    99% {
+        transform: translateX(0.5px);
+    }
+}
+
+/* 分隔图片容器 - 直接放在背景上，无背景色 */
+.background-separator {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 50px 0;
+    /* 确保无背景色，显示扫描线 */
+    background: none;
+    position: relative;
+    z-index: 100; /* 确保图片在扫描线之上但在文章容器之下 */
+}
+
+/* 分隔图片样式 - 保留水平位移，移除垂直位移 */
+.separator-image {
+    /* 设置适当的最大宽度 */
+    max-width: 600px; /* 与文章容器宽度一致 */
+    height: auto;
+    /* 确保图片正确显示，特别是如果是透明背景 */
+    image-rendering: pixelated;
+    /* 故障效果基础样式 - 保留水平位移和滤镜变化 */
+    position: relative;
+    animation: glitchImage 5s infinite alternate-reverse;
+    filter: contrast(110%) saturate(110%);
+}
+
+/* 图片故障动画效果 - 保留水平位移，移除垂直位移 */
+@keyframes glitchImage {
+    0% {
+        transform: translate(0);
+        filter: contrast(110%) saturate(110%);
+    }
+    2% {
+        transform: translate(-2px, 0);
+        filter: hue-rotate(5deg) contrast(105%) saturate(95%);
+    }
+    4% {
+        transform: translate(1px, 0);
+        filter: hue-rotate(-5deg) contrast(115%) saturate(105%);
+    }
+    6% {
+        transform: translate(0);
+        filter: contrast(110%) saturate(110%);
+    }
+    10% {
+        transform: translate(0);
+        filter: contrast(110%) saturate(110%);
+    }
+    12% {
+        transform: translate(2px, 0);
+        filter: contrast(120%) saturate(90%);
+    }
+    14% {
+        transform: translate(-2px, 0);
+        filter: contrast(90%) saturate(120%);
+    }
+    16% {
+        transform: translate(0);
+        filter: contrast(110%) saturate(110%);
+    }
+    25% {
+        transform: translate(0);
+        filter: contrast(110%) saturate(110%);
+    }
+    27% {
+        transform: translate(0);
+        filter: contrast(100%) saturate(120%) hue-rotate(10deg);
+    }
+    29% {
+        transform: translate(0);
+        filter: contrast(120%) saturate(100%) hue-rotate(-10deg);
+    }
+    31% {
+        transform: translate(0);
+        filter: contrast(110%) saturate(110%);
+    }
+    100% {
+        transform: translate(0);
+        filter: contrast(110%) saturate(110%);
+    }
+}
+
+/* 故障效果额外层 - 保留水平RGB分离效果，移除垂直位移 */
+.background-separator::before,
+.background-separator::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('asset/img/geebar.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    image-rendering: pixelated;
+    opacity: 0;
+    pointer-events: none;
+    animation: glitchRGB 5s infinite alternate-reverse;
+    z-index: 99;
+}
+
+.background-separator::before {
+    filter: hue-rotate(60deg);
+    mix-blend-mode: screen;
+}
+
+.background-separator::after {
+    filter: hue-rotate(-60deg);
+    mix-blend-mode: screen;
+}
+
+/* RGB故障效果 - 保留水平位移，移除垂直位移 */
+@keyframes glitchRGB {
+    0% {
+        opacity: 0;
+        transform: translate(0);
+    }
+    5% {
+        opacity: 0;
+    }
+    7% {
+        opacity: 0.5;
+        transform: translate(-3px, 0);
+    }
+    9% {
+        opacity: 0;
+        transform: translate(0);
+    }
+    15% {
+        opacity: 0;
+    }
+    17% {
+        opacity: 0.5;
+        transform: translate(3px, 0);
+    }
+    19% {
+        opacity: 0;
+        transform: translate(0);
+    }
+    30% {
+        opacity: 0;
+    }
+    32% {
+        opacity: 0.4;
+        transform: translate(0);
+    }
+    34% {
+        opacity: 0;
+        transform: translate(0);
+    }
+    40% {
+        opacity: 0;
+    }
+    42% {
+        opacity: 0.4;
+        transform: translate(0);
+    }
+    44% {
+        opacity: 0;
+        transform: translate(0);
+    }
+    65% {
+        opacity: 0;
+    }
+    67% {
+        opacity: 0.3;
+        transform: translate(-1px, 0);
+    }
+    69% {
+        opacity: 0;
+        transform: translate(0);
+    }
+    80% {
+        opacity: 0;
+    }
+    82% {
+        opacity: 0.3;
+        transform: translate(1px, 0);
+    }
+    84% {
+        opacity: 0;
+        transform: translate(0);
+    }
+    100% {
+        opacity: 0;
+    }
+}
+
+/* 容器间距调整 */
+.top-container {
+    margin-bottom: 0; /* 顶部容器与分隔图片之间无额外间距 */
+}
+
+.bottom-container {
+    margin-top: 0; /* 底部容器与分隔图片之间无额外间距 */
+}
+
+article {
+    margin-bottom: 30px;
+    position: relative;
+    padding: 20px;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+    cursor: none;
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(253, 45, 92, 0.1);
+}
+
+article:hover {
+    border-color: #fd2d5c;
+    background-color: rgba(253, 45, 92, 0.05);
+    /* 移除移动效果 */
+}
+
+h2 {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+    color: #fff;
+    text-shadow: none;
+    font-weight: normal;
+    transition: color 0.3s ease;
+}
+
+article:hover h2 {
+    color: #fd2d5c;
+}
+
+p {
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #fff;
+}
+
+footer {
+    text-align: center;
+    padding: 30px 0 10px;
+    font-size: 0.8rem;
+    color: #fd2d5c;
+}
+
+/* 像素化图片效果 */
+.pixel-image {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+    border: 2px solid #fff;
+    filter: grayscale(50%) contrast(120%) brightness(90%);
+}
+
+/* 复古滚动条 */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000;
+    border: 1px solid #fff;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #fff;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #fd2d5c;
+}
+
+/* 移除闪烁效果，保持视觉稳定 */
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.3rem;
+    }
+    
+    .post {
+        padding: 15px;
+    }
+}
+
+/* 干扰效果 */
+.interference {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 99;
+}
