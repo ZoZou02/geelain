@@ -17,17 +17,24 @@ window.addEventListener('DOMContentLoaded', function() {
         wrapper.appendChild(targetButton);
         
         // 添加点击事件监听器（不阻止默认行为，允许计数器正常工作）
-        targetButton.addEventListener('click', function() {
-            // 获取按钮在包装器中的位置信息
-            const rect = targetButton.getBoundingClientRect();
-            
-            // 计算按钮中心点相对于包装器的位置
-            const buttonX = rect.width / 2; // 按钮水平中心
-            const buttonY = rect.height / 2; // 从按钮垂直中心开始
-            
-            // 触发表情包效果
-            showButtonEmojiEffect(buttonX, buttonY, wrapper);
-        });
+        function handleClick() {
+            // 只有在不是长按的情况下才触发表情包效果
+            if (!isLongPressing) {
+                // 获取按钮在包装器中的位置信息
+                const rect = targetButton.getBoundingClientRect();
+                
+                // 计算按钮中心点相对于包装器的位置
+                const buttonX = rect.width / 2; // 按钮水平中心
+                const buttonY = rect.height / 2; // 从按钮垂直中心开始
+                
+                // 触发表情包效果
+                showButtonEmojiEffect(buttonX, buttonY, wrapper);
+                console.log('点击事件触发表情动画');
+            }
+        }
+        
+        // 添加点击事件监听器
+        targetButton.addEventListener('click', handleClick);
         
         // 添加长按支持
         let longPressTimer;
@@ -72,7 +79,10 @@ window.addEventListener('DOMContentLoaded', function() {
         function endLongPress() {
             clearTimeout(longPressTimer);
             clearInterval(longPressIntervalTimer);
-            isLongPressing = false;
+            // 添加短暂延迟再设置为false，确保点击事件不会立即触发
+            setTimeout(function() {
+                isLongPressing = false;
+            }, 200);
         }
         
         // 为不同设备添加长按事件监听

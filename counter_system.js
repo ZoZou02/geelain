@@ -391,4 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
     
+    // 添加定期自动更新功能，每30秒更新一次
+    setInterval(loadGbarCount, 10000);
+    
 });
