@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 点击计数器，控制API请求频率
     let clickCount = 0;
-    const apiRequestThreshold = 5;
+    const apiRequestThreshold = 10;
     
     // 初始化全局点击计数器（本地存储）
     let globalClicks = localStorage.getItem('geebarGlobalClicks') ? parseInt(localStorage.getItem('geebarGlobalClicks')) : 0;
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!grid) return;
         
         // 每个格子代表1000点能量
-        const pointsPerCell = 1000;
+        const pointsPerCell = 100000;
         // 每行5个格子
         const cellsPerRow = 5;
         // 计算需要的格子数量
