@@ -1,5 +1,4 @@
-    /* 复古计算机风格 */
-    @font-face {
+@font-face {
         font-family: 'Pixel';
         src: local('Courier New'), local('MS Gothic');
     }
@@ -279,10 +278,12 @@
     /* 容器间距调整 */
     .top-container {
         margin-bottom: 0;
+        transition: all 0.3s ease;
     }
 
     .bottom-container {
         margin-top: 0;
+        transition: all 0.3s ease;
     }
 
     article {
@@ -324,6 +325,7 @@
         text-align: center;
         position: relative;
         z-index: 101;
+        transition: all 0.3s ease;
     }
 
     .offline-timer {
@@ -396,6 +398,7 @@
     /* 点击器容器样式 */
     .clicker-container {
         margin: 20px auto 40px;
+        transition: all 0.3s ease;
     }
 
     /* 页脚样式 */
@@ -510,6 +513,7 @@
         letter-spacing: 1px;
         position: relative;
         text-align: center;
+        transition: all 0.3s ease;
     }
 
     .counter-description {

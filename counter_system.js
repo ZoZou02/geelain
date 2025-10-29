@@ -87,8 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // 更新显示（总能量）
         gbarCountElement.textContent = totalEnergy.toLocaleString();
 
-        // 不显示第二计数器的独立数值
-
         // 添加数字变化动画
         gbarCountElement.classList.add('counter-flash');
         setTimeout(() => gbarCountElement.classList.remove('counter-flash'), 500);
@@ -139,21 +137,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // 从 GET 接口解析计数值的通用方法
+    // 从 GET 接口解析计数值
     function parseCountFromGetResponse(data) {
         if (!data) return NaN;
-        // 尝试多种常见字段
-        if (data.counter && typeof data.counter.current_count !== 'undefined') {
-            return parseInt(data.counter.current_count);
-        }
-        if (typeof data.current_count !== 'undefined') {
-            return parseInt(data.current_count);
-        }
-        if (typeof data.value !== 'undefined') {
-            return parseInt(data.value);
-        }
-        if (typeof data.count !== 'undefined') {
-            return parseInt(data.count);
+        
+        try {
+            // 只处理特定格式: {"success":true,"counter":{"current_count":"911771794"}}
+            if (data.success === true && data.counter && typeof data.counter.current_count !== 'undefined') {
+                return parseInt(data.counter.current_count);
+            }
+        } catch (error) {
+            console.error('解析计数值时出错:', error);
         }
         return NaN;
     }
@@ -211,8 +205,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentCount = parseInt(gbarCountElement.textContent.replace(/,/g, '')) || 0;
         const newValue = currentCount + 1;
         gbarCountElement.textContent = newValue.toLocaleString();
-        
-        // 可视化更新改为在成功拉取最新主/次计数后统一渲染，避免点击瞬间大量网格闪烁
         
         // 更新本地存储的点击计数
         localClickCount++;
@@ -276,7 +268,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .catch(error => {
                         console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
-                        // 网络错误时使用本地数据
                         // 保持现状，等待下次自动刷新
                     });
             }
@@ -348,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // 创建召唤特效 - 复古风格
+    // 创建特效
     function createCallEffect() {
         const rect = gbarButton.getBoundingClientRect();
         
@@ -478,6 +469,10 @@ document.addEventListener('DOMContentLoaded', function() {
             if (titleElement) {
                 counterContainer.insertBefore(gridContainer, titleElement.nextSibling);
             }
+            
+            // 为counter-container添加动画效果
+            counterContainer.style.transition = 'all 0.8s cubic-bezier(0.4, 0, 0.2, 1)';
+            counterContainer.style.transform = 'translateY(0)';
         }
         
         // 添加可视化相关的CSS
@@ -491,6 +486,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 padding: 10px;
                 min-height: 60px;
                 overflow: hidden;
+                transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+                opacity: 0;
+                transform: translateY(20px);
+                animation: containerAppear 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
             }
             
             .energy-grid {
@@ -533,6 +532,127 @@ document.addEventListener('DOMContentLoaded', function() {
             @keyframes shimmer {
                 0% { left: -100%; }
                 100% { left: 100%; }
+            }
+            
+            /* 容器出现动画 */
+            @keyframes containerAppear {
+                0% {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                100% {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+            
+            /* 格子出现动画 */
+            @keyframes cellAppear {
+                0% {
+                    opacity: 0;
+                    transform: skewX(-20deg) scale(0.8) translateY(10px);
+                }
+                100% {
+                    opacity: 1;
+                    transform: skewX(-20deg) scale(1) translateY(0);
+                }
+            }
+            
+            /* 格子填充动画 */
+            @keyframes cellFill {
+                0% {
+                    transform: skewX(-20deg) scale(0.9);
+                    box-shadow: 0 0 5px rgba(253, 45, 92, 0.3);
+                }
+                50% {
+                    transform: skewX(-20deg) scale(1.05);
+                    box-shadow: 0 0 15px rgba(253, 45, 92, 0.9);
+                }
+                100% {
+                    transform: skewX(-20deg) scale(1);
+                    box-shadow: 0 0 10px rgba(253, 45, 92, 0.7);
+                }
+            }
+            
+            /* 金块合成动画 */
+            @keyframes cellGold {
+                0% {
+                    transform: skewX(-20deg) scale(0.8);
+                    box-shadow: 0 0 5px rgba(244, 197, 66, 0.3);
+                }
+                30% {
+                    transform: skewX(-20deg) scale(1.1);
+                    box-shadow: 0 0 20px rgba(244, 197, 66, 1);
+                }
+                60% {
+                    transform: skewX(-20deg) scale(0.95);
+                    box-shadow: 0 0 15px rgba(244, 197, 66, 0.8);
+                }
+                100% {
+                    transform: skewX(-20deg) scale(1);
+                    box-shadow: 0 0 10px rgba(244, 197, 66, 0.7);
+                }
+            }
+            
+            /* 新金块特殊效果 */
+            .energy-cell.new-gold {
+                animation: newGoldEffect 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            }
+            
+            @keyframes newGoldEffect {
+                0% {
+                    transform: skewX(-20deg) scale(0.5);
+                    opacity: 0;
+                    box-shadow: 0 0 0px rgba(244, 197, 66, 0);
+                }
+                20% {
+                    transform: skewX(-20deg) scale(1.2);
+                    opacity: 1;
+                    box-shadow: 0 0 25px rgba(244, 197, 66, 1);
+                }
+                40% {
+                    transform: skewX(-20deg) scale(0.9);
+                    box-shadow: 0 0 20px rgba(244, 197, 66, 0.8);
+                }
+                60% {
+                    transform: skewX(-20deg) scale(1.05);
+                    box-shadow: 0 0 15px rgba(244, 197, 66, 0.9);
+                }
+                80% {
+                    transform: skewX(-20deg) scale(0.98);
+                    box-shadow: 0 0 12px rgba(244, 197, 66, 0.7);
+                }
+                100% {
+                    transform: skewX(-20deg) scale(1);
+                    box-shadow: 0 0 10px rgba(244, 197, 66, 0.7);
+                }
+            }
+            
+            /* 容器震动效果 */
+            .counter-container.gold-synthesis {
+                animation: containerShake 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            
+            @keyframes containerShake {
+                0%, 100% { transform: translateY(0) translateX(0); }
+                10% { transform: translateY(-2px) translateX(-1px); }
+                20% { transform: translateY(2px) translateX(1px); }
+                30% { transform: translateY(-1px) translateX(-1px); }
+                40% { transform: translateY(1px) translateX(1px); }
+                50% { transform: translateY(-1px) translateX(0); }
+                60% { transform: translateY(1px) translateX(0); }
+                70% { transform: translateY(-0.5px) translateX(0); }
+                80% { transform: translateY(0.5px) translateX(0); }
+                90% { transform: translateY(0) translateX(0); }
+            }
+
+            /* 网格在减少格子时的轻微收缩反馈 */
+            .energy-grid.grid-collapse {
+                animation: gridCollapse 0.3s ease;
+            }
+            @keyframes gridCollapse {
+                0% { transform: scale(1); opacity: 1; }
+                100% { transform: scale(0.98); opacity: 0.95; }
             }
             
             /* 添加间歇性故障效果 */
@@ -652,6 +772,39 @@ document.addEventListener('DOMContentLoaded', function() {
         const goldCells = Math.max(0, Math.floor(secondaryCount));
         const primaryFullCells = Math.floor(primaryCount / pointsPerCell);
         const primaryPartial = (primaryCount % pointsPerCell) / pointsPerCell;
+        
+        // 检查上次渲染的值
+        const previousGoldCells = parseInt(grid.dataset.previousGoldCells || '0');
+        const prevPrimaryFullCells = parseInt(grid.dataset.prevPrimaryFullCells || '0');
+        const prevPrimaryPartial = parseFloat(grid.dataset.prevPrimaryPartial || '0');
+
+        const hasNewGoldCell = goldCells > previousGoldCells;
+        const redFullIncreased = primaryFullCells > prevPrimaryFullCells;
+        const redDecreased = (primaryFullCells < prevPrimaryFullCells) || (primaryFullCells === prevPrimaryFullCells && primaryPartial < prevPrimaryPartial);
+
+        // 记录本次值（用于下次对比）
+        grid.dataset.previousGoldCells = goldCells.toString();
+        grid.dataset.prevPrimaryFullCells = primaryFullCells.toString();
+        grid.dataset.prevPrimaryPartial = primaryPartial.toString();
+        
+        // 如果有新金块合成或红色格减少（重置），触发容器震动效果
+        if (hasNewGoldCell || redDecreased) {
+            const counterContainer = document.querySelector('.counter-container');
+            if (counterContainer) {
+                counterContainer.classList.add('gold-synthesis');
+                setTimeout(() => {
+                    counterContainer.classList.remove('gold-synthesis');
+                }, 600);
+            }
+        }
+        // 红色格减少时给网格一个轻微收缩反馈
+        if (redDecreased) {
+            const gridEl = document.getElementById('energy-grid');
+            if (gridEl) {
+                gridEl.classList.add('grid-collapse');
+                setTimeout(() => gridEl.classList.remove('grid-collapse'), 300);
+            }
+        }
 
         // 混合单位格子总数 = 金色格（以 1B 为单位）+ 红色满格 + 是否需要一个红色部分格
         const redCellsNeeded = primaryFullCells + (primaryPartial > 0 ? 1 : 0);
@@ -664,10 +817,22 @@ document.addEventListener('DOMContentLoaded', function() {
         for (let i = 0; i < totalCells; i++) {
             const cell = document.createElement('div');
             cell.className = 'energy-cell';
+            
 
             if (i < goldCells) {
                 // 金色满格
                 cell.classList.add('gold');
+                
+                // 如果是新合成的金块，仅对新增的金色格添加动画
+                if (hasNewGoldCell && i >= previousGoldCells) {
+                    const localIndex = i - previousGoldCells;
+                    const delay = localIndex * 80;
+                    cell.classList.add('new-gold');
+                    setTimeout(() => {
+                        cell.style.animation = 'cellGold 0.9s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+                    }, delay);
+                }
+                
                 const fill = document.createElement('div');
                 fill.style.position = 'absolute';
                 fill.style.top = '-5px';
@@ -677,6 +842,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fill.style.backgroundColor = '#f4c542';
                 fill.style.transform = 'skewX(0deg)';
                 fill.style.transformOrigin = '0 0';
+                fill.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                 cell.appendChild(fill);
             } else if (i < goldCells + primaryFullCells) {
                 // 红色满格（来自第一计数器）
@@ -691,7 +857,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 fill.style.backgroundColor = '#fd2d5c';
                 fill.style.transform = 'skewX(0deg)';
                 fill.style.transformOrigin = '0 0';
+                fill.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                 cell.appendChild(fill);
+
+                // 仅对新增的红色满格添加填充动画
+                const redStartIndex = goldCells + prevPrimaryFullCells;
+                if (redFullIncreased && i >= redStartIndex) {
+                    const localIndex = i - redStartIndex;
+                    const delay = localIndex * 60;
+                    setTimeout(() => {
+                        cell.style.animation = 'cellFill 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards';
+                    }, delay);
+                }
             } else if (i === goldCells + primaryFullCells && primaryPartial > 0) {
                 // 红色部分填充格
                 const fill = document.createElement('div');
@@ -703,6 +880,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 fill.style.backgroundColor = '#fd2d5c';
                 fill.style.transform = 'skewX(0deg)';
                 fill.style.transformOrigin = '0 0';
+                fill.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
                 cell.appendChild(fill);
                 cell.style.borderColor = '#fd2d5c';
             }

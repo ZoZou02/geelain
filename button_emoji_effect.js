@@ -282,8 +282,3 @@ function createSingleEmoji(x, y, container) {
         }, 300);
     }, 800);
 }
-
-// 导出函数以便在其他地方调用（如果需要）
-if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-    module.exports = { showButtonEmojiEffect, createSingleEmoji };
-}
