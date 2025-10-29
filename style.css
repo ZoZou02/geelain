@@ -552,6 +552,9 @@
         transition: all 0.2s ease;
         outline: none;
         text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
     }
 
     .click-button:hover {

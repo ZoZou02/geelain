@@ -16,21 +16,53 @@ window.addEventListener('DOMContentLoaded', function() {
         targetButton.parentNode.insertBefore(wrapper, targetButton);
         wrapper.appendChild(targetButton);
         
+        // 按钮自身点击/按压动画（内联样式，兼容移动端）
+        function setButtonPressedVisual(isPressed) {
+            if (!targetButton.style.transition) {
+                targetButton.style.transition = 'transform 0.2s ease';
+            }
+            if (isPressed) {
+                targetButton.style.transform = 'scale(0.95)';
+            } else {
+                targetButton.style.transform = '';
+            }
+        }
+
+        function playButtonPop() {
+            const originalTransition = targetButton.style.transition;
+            targetButton.style.transition = 'transform 120ms ease-out';
+            targetButton.style.transform = 'scale(1.0)';
+            setTimeout(function() {
+                targetButton.style.transform = '';
+                targetButton.style.transition = originalTransition || '';
+            }, 120);
+        }
+
+        // 触发表情包效果的辅助函数
+        function triggerEmojiEffect() {
+            // 获取按钮在包装器中的位置信息
+            const rect = targetButton.getBoundingClientRect();
+            
+            // 计算按钮中心点相对于包装器的位置
+            const buttonX = rect.width / 2; // 按钮水平中心
+            const buttonY = rect.height / 2; // 从按钮垂直中心开始
+            
+            // 触发表情包效果
+            showButtonEmojiEffect(buttonX, buttonY, wrapper);
+            console.log('触发表情动画');
+        }
+        
+        // 记录最近一次由触摸触发动画的时间，用于避免随后click重复动画
+        let lastTouchTriggerTime = 0;
+        const CLICK_DUP_INTERVAL = 500; // 触摸后500ms内的click不再重复动画
+
         // 添加点击事件监听器（不阻止默认行为，允许计数器正常工作）
         function handleClick() {
-            // 只有在不是长按的情况下才触发表情包效果
-            if (!isLongPressing) {
-                // 获取按钮在包装器中的位置信息
-                const rect = targetButton.getBoundingClientRect();
-                
-                // 计算按钮中心点相对于包装器的位置
-                const buttonX = rect.width / 2; // 按钮水平中心
-                const buttonY = rect.height / 2; // 从按钮垂直中心开始
-                
-                // 触发表情包效果
-                showButtonEmojiEffect(buttonX, buttonY, wrapper);
-                console.log('点击事件触发表情动画');
+            // 如果刚刚在触摸结束时已经触发过动画，则跳过本次click的动画，避免重复
+            if (Date.now() - lastTouchTriggerTime < CLICK_DUP_INTERVAL) {
+                return;
             }
+            triggerEmojiEffect();
         }
         
         // 添加点击事件监听器
@@ -43,14 +75,22 @@ window.addEventListener('DOMContentLoaded', function() {
         let isLongPressing = false;
         let longPressIntervalTimer;
         
+        // 触摸事件相关变量
+        let touchStartTime = 0;
+        const TAP_DELAY = 150; // 点击的最大持续时间（毫秒）
+        
         // 开始长按
         function startLongPress() {
+            // 记录触摸开始时间
+            touchStartTime = Date.now();
+            
             // 清除之前可能存在的计时器
             clearTimeout(longPressTimer);
             
             // 设置长按计时器
             longPressTimer = setTimeout(function() {
                 isLongPressing = true;
+                console.log('长按事件触发表情动画');
                 
                 // 长按开始后，每隔一段时间弹出一次表情包
                 triggerLongPressEffect();
@@ -77,24 +117,66 @@ window.addEventListener('DOMContentLoaded', function() {
         
         // 结束长按
         function endLongPress() {
+            // 清除计时器
             clearTimeout(longPressTimer);
             clearInterval(longPressIntervalTimer);
-            // 添加短暂延迟再设置为false，确保点击事件不会立即触发
-            setTimeout(function() {
-                isLongPressing = false;
-            }, 200);
+            
+            // 计算触摸持续时间
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // 立即设置长按状态为false
+            isLongPressing = false;
+            
+            console.log(`触摸持续时间: ${touchDuration}ms`);
         }
         
-        // 为不同设备添加长按事件监听
-        // 鼠标设备
-        targetButton.addEventListener('mousedown', startLongPress);
-        targetButton.addEventListener('mouseup', endLongPress);
-        targetButton.addEventListener('mouseleave', endLongPress);
+        // 为鼠标设备添加事件监听
+        targetButton.addEventListener('mousedown', function() {
+            setButtonPressedVisual(true);
+            startLongPress();
+        });
+        targetButton.addEventListener('mouseup', function() {
+            setButtonPressedVisual(false);
+            playButtonPop();
+            endLongPress();
+        });
+        targetButton.addEventListener('mouseleave', function() {
+            setButtonPressedVisual(false);
+            endLongPress();
+        });
         
-        // 触摸设备
-        targetButton.addEventListener('touchstart', startLongPress, { passive: true });
-        targetButton.addEventListener('touchend', endLongPress, { passive: true });
-        targetButton.addEventListener('touchcancel', endLongPress, { passive: true });
+        // 为触摸设备添加事件监听
+        // 针对移动设备优化的触摸事件处理
+        targetButton.addEventListener('touchstart', function(e) {
+            // 记录触摸开始时间
+            touchStartTime = Date.now();
+            
+            // 开始长按检测
+            startLongPress();
+            setButtonPressedVisual(true);
+        }, { passive: true });
+        
+        targetButton.addEventListener('touchend', function(e) {
+            // 计算触摸持续时间
+            const touchDuration = Date.now() - touchStartTime;
+            
+            // 结束长按
+            endLongPress();
+            setButtonPressedVisual(false);
+            playButtonPop();
+            
+            // 如果触摸时间很短，视为点击，确保在移动设备上点击也能触发动画
+            if (touchDuration < longPressDelay && touchDuration > 0) {
+                // 直接在touchend触发动画，解决部分设备上click不触发或延迟的问题
+                lastTouchTriggerTime = Date.now();
+                triggerEmojiEffect();
+            }
+        }, { passive: true });
+        
+        targetButton.addEventListener('touchcancel', function() {
+            setButtonPressedVisual(false);
+            endLongPress();
+        }, { passive: true });
         
         console.log('基于按钮位置的表情包效果已初始化');
     } else {

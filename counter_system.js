@@ -155,7 +155,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 触摸事件支持（移动端长按功能优化）
     gbarButton.addEventListener('touchstart', function(e) {
-        e.preventDefault(); // 阻止默认行为，防止触摸时页面滚动和触发点击事件
+        // 仅在事件可取消时才阻止默认行为
+        if (e.cancelable) {
+            e.preventDefault(); // 阻止默认行为，防止触摸时页面滚动和触发点击事件
+        }
         
         // 立即执行一次点击（确保点击有反馈）
         callGeebar();
@@ -177,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
             touch.clientY < rect.top || touch.clientY > rect.bottom) {
             handleRelease();
         }
-    }, { passive: false });
+    }, { passive: true }); // 设为true以提高滚动性能，因为没有调用preventDefault
     
     document.addEventListener('touchcancel', handleRelease);
     
