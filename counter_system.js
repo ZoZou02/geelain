@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!grid) return;
         
         // 每个格子代表1000点能量
-        const pointsPerCell = 100000;
+        const pointsPerCell = 10000000;
         // 每行5个格子
         const cellsPerRow = 5;
         // 计算需要的格子数量
