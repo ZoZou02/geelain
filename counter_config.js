@@ -8,7 +8,7 @@ const COUNTER_CONFIG = {
     autoUpdateInterval: 15000,
 
     // 本地批量发送阈值（点击累积到该值时触发一次更新逻辑）
-    clickThreshold: 911,
+    clickThreshold: 911,  //g11 QAQ
 
     // API 配置
     api: {

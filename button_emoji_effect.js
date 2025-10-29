@@ -1,11 +1,9 @@
 // 基于按钮位置的表情包弹出效果
-
 // 等待DOM加载完成
 window.addEventListener('DOMContentLoaded', function() {
     // 获取目标按钮元素（按钮ID为'click-button'）
     const targetButton = document.getElementById('click-button');
     
-    // 如果按钮存在，则初始化表情包效果
     if (targetButton) {
         // 为按钮创建一个包装器作为相对定位的容器
         const wrapper = document.createElement('div');
@@ -49,9 +47,9 @@ window.addEventListener('DOMContentLoaded', function() {
             // 获取按钮在包装器中的位置信息
             const rect = targetButton.getBoundingClientRect();
             
-            // 计算按钮中心点相对于包装器的位置
-            const buttonX = rect.width / 2; // 按钮水平中心
-            const buttonY = rect.height / 2; // 从按钮垂直中心开始
+            // 计算按钮中心点相对位置
+            const buttonX = rect.width / 2; 
+            const buttonY = rect.height / 2; 
             
             // 触发表情包效果
             showButtonEmojiEffect(buttonX, buttonY, wrapper);
@@ -152,7 +150,6 @@ window.addEventListener('DOMContentLoaded', function() {
         });
         
         // 为触摸设备添加事件监听
-        // 针对移动设备优化的触摸事件处理
         targetButton.addEventListener('touchstart', function(e) {
             // 记录触摸开始时间
             touchStartTime = Date.now();
@@ -192,7 +189,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 // 基于按钮位置显示表情包效果的函数
 function showButtonEmojiEffect(buttonX, buttonY, container) {
-    // 创建多个表情包（5-8个随机数量）
+    
     const emojiCount = Math.floor(Math.random() * 4) + 5; // 5-8个表情包
     
     for (let i = 0; i < emojiCount; i++) {
@@ -204,7 +201,7 @@ function showButtonEmojiEffect(buttonX, buttonY, container) {
 
 // 创建单个表情包元素的函数
 function createSingleEmoji(x, y, container) {
-    // 创建img元素
+    
     const emoji = document.createElement('img');
     
     // 随机角度和距离 - 向四周弹出
@@ -215,8 +212,8 @@ function createSingleEmoji(x, y, container) {
     
     // 设置样式 - 绝对定位，从按钮中心开始
     emoji.style.position = 'absolute';
-    emoji.style.left = '50%'; // 水平居中
-    emoji.style.top = '50%'; // 垂直居中
+    emoji.style.left = '50%'; 
+    emoji.style.top = '50%';
     emoji.style.transform = 'translate(-50%, -50%) scale(0)';
     emoji.style.opacity = '0';
     emoji.style.pointerEvents = 'none';

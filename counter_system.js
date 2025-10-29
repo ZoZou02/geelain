@@ -175,7 +175,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const remainder = goldCells % cellsPerRow;
         if (remainder === 0) return thresholdUnit;
         const cellsToFillRow = cellsPerRow - remainder; // 需要补的红色格数量
-        const adjusted = thresholdUnit - cellsToFillRow * pointsPerCell; // 往小了算
+        const adjusted = thresholdUnit - cellsToFillRow * pointsPerCell; // 向下取整，确保红色格补满一行
         return Math.max(pointsPerCell, adjusted);
     }
 
