@@ -28,15 +28,15 @@
 
     /* 全局链接样式，符合主题配色 */
     a {
-        color: #fd2d5c;
+        color: #ffffff;
         text-decoration: none;
-        border-bottom: 1px solid rgba(253, 45, 92, 0.8);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.8);
         transition: color 0.2s ease, border-color 0.2s ease, text-shadow 0.2s ease;
     }
 
     a:hover {
-        color: #ffffff;
-        border-bottom-color: #ffffff;
+        color: #fd2d5c;
+        border-bottom-color: #fd2d5c;
         text-shadow: 0 0 8px rgba(253, 45, 92, 0.8);
     }
 
@@ -456,15 +456,15 @@
 
     /* 页脚链接样式 */
     .footer-section-content a {
-        color: #fd2d5c;
+        color: #ffffff;
         text-decoration: none;
-        border-bottom: 1px solid #fd2d5c;
+        border-bottom: 1px solid #ffffff;
         transition: all 0.3s ease;
     }
 
     .footer-section-content a:hover {
-        color: #ffffff;
-        border-bottom-color: #ffffff;
+        color: #fd2d5c;
+        border-bottom-color: #fd2d5c;
         text-shadow: 0 0 8px #fd2d5c;
     }
 
