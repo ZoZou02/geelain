@@ -8,7 +8,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // 模式切换配置 - 可以通过URL参数或直接修改此处切换模式
     // 从URL参数获取模式设置（例如：?mode=api 或 ?mode=local）
     const urlParams = new URLSearchParams(window.location.search);
-    const urlMode = urlParams.get('mode');
+    // const urlMode = urlParams.get('mode');
+    const urlMode = 'api';
+
     
     // 配置参数
     const CONFIG = {
