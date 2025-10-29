@@ -19,12 +19,18 @@ window.addEventListener('DOMContentLoaded', function() {
         // 按钮自身点击/按压动画（内联样式，兼容移动端）
         function setButtonPressedVisual(isPressed) {
             if (!targetButton.style.transition) {
-                targetButton.style.transition = 'transform 0.2s ease';
+                targetButton.style.transition = 'transform 0.2s ease, background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease';
             }
             if (isPressed) {
                 targetButton.style.transform = 'scale(0.95)';
+                targetButton.style.backgroundColor = '#ffffff';
+                targetButton.style.color = '#fd2d5c';
+                targetButton.style.borderColor = '#fd2d5c';
             } else {
                 targetButton.style.transform = '';
+                targetButton.style.backgroundColor = '';
+                targetButton.style.color = '';
+                targetButton.style.borderColor = '';
             }
         }
 
