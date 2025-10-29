@@ -1,38 +1,22 @@
 // 计数器功能模块
+// 导入配置
+import COUNTER_CONFIG from './counter_config.js';
 
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', function() {
+    // 获取计数器元素
     const gbarCountElement = document.getElementById('global-click-counter');
     const gbarButton = document.getElementById('click-button');
     
-    // 模式切换配置 - 可以通过URL参数或直接修改此处切换模式
+    
     // 从URL参数获取模式设置（例如：?mode=api 或 ?mode=local）
     const urlParams = new URLSearchParams(window.location.search);
-    // const urlMode = urlParams.get('mode');
-    const urlMode = 'api';
-
+    const urlMode = urlParams.get('mode');
     
-    // 配置参数
+    // 合并URL模式设置和配置文件中的设置
     const CONFIG = {
-        // 默认模式: 'local' (本地测试) 或 'api' (API模式)
-        mode: urlMode === 'api' ? 'api' : 'local',
-        
-        // API模式配置
-        api: {
-            key: '6c18b0cafb24205829af9e2fb75c3a2a',
-            counterId: '6200f7021fe890c7f925ff27cf10cabd',
-            baseUrl: 'https://js.ruseo.cn/api/counter.php'
-        },
-        
-        // 本地测试模式配置
-        local: {
-            baseCount: 208000, // 模拟的基础计数值
-            randomVariation: 500 // 随机变化范围
-        },
-        
-        // 通用配置
-        clickThreshold: 5, // 点击阈值，达到后更新数据
-        autoUpdateInterval: 10000 // 自动更新间隔(毫秒)
+        ...COUNTER_CONFIG,
+        mode: urlMode === 'local' || urlMode === 'api' ? urlMode : COUNTER_CONFIG.mode
     };
     
     // 显示当前模式信息
@@ -44,76 +28,178 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化本地点击计数器（本地存储）
     let localClickCount = localStorage.getItem('geebarLocalClicks') ? parseInt(localStorage.getItem('geebarLocalClicks')) : 0;
     
-    // 加载GBAR召唤能量 - 根据模式选择不同的加载方式
-    function loadGbarCount() {
+    // 初始化本地第二个计数器（本地存储）
+    let localSecondaryCount = localStorage.getItem('geebarSecondaryClicks') ? parseInt(localStorage.getItem('geebarSecondaryClicks')) : 0;
+    
+    // 加载计数器数据 - 根据模式选择不同的加载方式
+    function loadCounters() {
         if (CONFIG.mode === 'local') {
-            loadLocalGbarCount();
+            loadLocalCounters();
         } else {
-            loadApiGbarCount();
+            loadApiCounters();
         }
     }
-    
-    // 加载本地测试模式的GBAR召唤能量
+
+    // 次计数器自增（带重试）
+    function incrementSecondaryWithRetry(retries = 2) {
+        const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.secondaryCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.secondaryCounter.id}`;
+        return fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (!(data && data.success)) {
+                    if (retries > 0) {
+                        console.warn(`[API模式] 第二计数器增加失败，重试剩余 ${retries} 次`);
+                        return incrementSecondaryWithRetry(retries - 1);
+                    }
+                    throw new Error(data && data.message ? data.message : '第二计数器增加失败');
+                }
+                console.log('[API模式] 第二计数器增加成功');
+                return true;
+            })
+            .catch(err => {
+                if (retries > 0) {
+                    console.warn(`[API模式] 第二计数器增加请求异常，重试剩余 ${retries} 次: ${err.message}`);
+                    return incrementSecondaryWithRetry(retries - 1);
+                }
+                console.error(`[API模式] 第二计数器增加最终失败: ${err.message}`);
+            });
+    }
+
+    // 兼容旧调用名
+    function loadGbarCount() {
+        loadCounters();
+    }
     function loadLocalGbarCount() {
+        loadLocalCounters();
+    }
+    
+    // 加载本地测试模式的计数器数据
+    function loadLocalCounters() {
         // 本地模式：使用本地存储的点击数 + 基础计数 + 模拟的其他用户点击
         const simulatedOtherUsers = Math.floor(Math.random() * CONFIG.local.randomVariation);
-        const totalCount = CONFIG.local.baseCount + localClickCount + simulatedOtherUsers;
-        
-        // 更新显示
-        gbarCountElement.textContent = totalCount.toLocaleString();
-        
+        const primaryCount = CONFIG.local.primaryBaseCount + localClickCount + simulatedOtherUsers;
+        const secondaryCount = CONFIG.local.secondaryBaseCount + localSecondaryCount;
+        const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000;
+
+        // 总能量 = 主计数 + 次计数 * 阈值单位
+        const totalEnergy = primaryCount + secondaryCount * thresholdUnit;
+
+        // 更新显示（总能量）
+        gbarCountElement.textContent = totalEnergy.toLocaleString();
+
+        // 不显示第二计数器的独立数值
+
         // 添加数字变化动画
         gbarCountElement.classList.add('counter-flash');
         setTimeout(() => gbarCountElement.classList.remove('counter-flash'), 500);
-        
-        // 更新可视化效果
-        updateVisualization(totalCount);
-        
-        console.log(`[本地模式] 当前计数: ${totalCount} (基础: ${CONFIG.local.baseCount}, 本地点击: ${localClickCount}, 模拟其他用户: ${simulatedOtherUsers})`);
+
+        // 更新可视化效果（按主/次计数组件）
+        updateVisualizationFromComponents(primaryCount, secondaryCount);
+
+        console.log(`[本地模式] 主计数器(显示并入总能量): ${primaryCount}, 第二计数器: ${secondaryCount}, 总能量: ${totalEnergy}`);
     }
     
-    // 加载API模式的GBAR召唤能量
-    function loadApiGbarCount() {
-        const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.api.key}&action=get&counter_id=${CONFIG.api.counterId}`;
-        
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data && data.success && data.counter && data.counter.current_count) {
-                    const count = parseInt(data.counter.current_count);
-                    if (!isNaN(count)) {
-                        gbarCountElement.textContent = count.toLocaleString();
-                        // 添加数字变化动画
-                        gbarCountElement.classList.add('counter-flash');
-                        setTimeout(() => gbarCountElement.classList.remove('counter-flash'), 500);
-                        // 更新可视化效果
-                        updateVisualization(count);
-                        console.log(`[API模式] 成功加载计数: ${count}`);
-                    } else {
-                        handleApiError('计数数据无效');
-                    }
-                } else {
-                    handleApiError('未返回有效数据');
-                }
-            })
-            .catch(error => {
-                handleApiError(`API请求失败: ${error.message}`);
-            });
+    // 加载API模式的计数器数据
+    function loadApiCounters() {
+        const primaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.primaryCounter.id}`;
+        const secondaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.secondaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.secondaryCounter.id}`;
+
+        Promise.all([
+            fetch(primaryUrl).then(r => r.json()).catch(err => ({ error: err })),
+            fetch(secondaryUrl).then(r => r.json()).catch(err => ({ error: err }))
+        ])
+        .then(([pRes, sRes]) => {
+            const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000;
+
+            const validPrimary = pRes && pRes.success && pRes.counter && pRes.counter.current_count;
+            const validSecondary = sRes && sRes.success && sRes.counter && sRes.counter.current_count;
+
+            if (!validPrimary || !validSecondary) {
+                if (!validPrimary) console.error('[API模式] 主计数数据无效或请求失败');
+                if (!validSecondary) console.error('[API模式] 第二计数数据无效或请求失败');
+                return handleApiError('计数器数据不完整');
+            }
+
+            const primaryCount = parseInt(pRes.counter.current_count) || 0;
+            const secondaryCount = parseInt(sRes.counter.current_count) || 0;
+            const totalEnergy = primaryCount + secondaryCount * thresholdUnit;
+
+            // 显示总能量（不显示第二计数器独立数值）
+            gbarCountElement.textContent = totalEnergy.toLocaleString();
+
+            // 动画与可视化（主/次计数组件）
+            gbarCountElement.classList.add('counter-flash');
+            setTimeout(() => gbarCountElement.classList.remove('counter-flash'), 500);
+            updateVisualizationFromComponents(primaryCount, secondaryCount);
+
+            console.log(`[API模式] 主: ${primaryCount}, 次: ${secondaryCount}, 总能量: ${totalEnergy}`);
+        })
+        .catch((error) => {
+            handleApiError(`计数器API并行请求失败: ${error.message}`);
+        });
     }
     
+    // 从 GET 接口解析计数值的通用方法
+    function parseCountFromGetResponse(data) {
+        if (!data) return NaN;
+        // 尝试多种常见字段
+        if (data.counter && typeof data.counter.current_count !== 'undefined') {
+            return parseInt(data.counter.current_count);
+        }
+        if (typeof data.current_count !== 'undefined') {
+            return parseInt(data.current_count);
+        }
+        if (typeof data.value !== 'undefined') {
+            return parseInt(data.value);
+        }
+        if (typeof data.count !== 'undefined') {
+            return parseInt(data.count);
+        }
+        return NaN;
+    }
+
+    // 获取主/次计数（GET），返回 { primary, secondary }
+    function getPrimarySecondaryCounts() {
+        const primaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.primaryCounter.id}`;
+        const secondaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.secondaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.secondaryCounter.id}`;
+        return Promise.all([
+            fetch(primaryUrl).then(r => r.json()).catch(() => null),
+            fetch(secondaryUrl).then(r => r.json()).catch(() => null)
+        ]).then(([pRes, sRes]) => {
+            const primary = parseCountFromGetResponse(pRes);
+            const secondary = parseCountFromGetResponse(sRes);
+            return { primary: isNaN(primary) ? 0 : primary, secondary: isNaN(secondary) ? 0 : secondary };
+        });
+    }
+
+    // 计算“进位阈值”使红色格在进位时恰好补满一行（5个）
+    function getEffectiveResetThreshold(secondaryCount) {
+        const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000; // 1,000,000,000
+        const pointsPerCell = 10000000; // 10,000,000
+        const cellsPerRow = 5;
+        const goldCells = Math.max(0, Math.floor(secondaryCount));
+        const remainder = goldCells % cellsPerRow;
+        if (remainder === 0) return thresholdUnit;
+        const cellsToFillRow = cellsPerRow - remainder; // 需要补的红色格数量
+        const adjusted = thresholdUnit - cellsToFillRow * pointsPerCell; // 往小了算
+        return Math.max(pointsPerCell, adjusted);
+    }
+
     // 处理API错误，回退到本地模式临时显示
     function handleApiError(errorMsg) {
         console.error(`[API模式] ${errorMsg}`);
         
-        // 临时使用本地数据作为显示
-        const fallbackCount = CONFIG.local.baseCount + localClickCount;
-        gbarCountElement.textContent = fallbackCount.toLocaleString();
-        updateVisualization(fallbackCount);
+        // 临时使用本地数据作为显示（总能量）
+        const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000;
+        const fallbackPrimary = CONFIG.local.primaryBaseCount + localClickCount;
+        const totalEnergy = fallbackPrimary + (localSecondaryCount * thresholdUnit);
+        gbarCountElement.textContent = totalEnergy.toLocaleString();
+        updateVisualizationFromComponents(fallbackPrimary, localSecondaryCount);
         
-        console.log(`[API模式] 临时使用本地数据显示: ${fallbackCount}`);
+        console.log(`[API模式] 临时使用本地数据显示: 主计数器 ${fallbackPrimary}, 第二计数器 ${localSecondaryCount}, 总能量 ${totalEnergy}`);
     }
     
-    // 呼叫GBAR - 优化版本，支持快速连续点击
+    // 优化版本，支持快速连续点击和阈值重置逻辑
     function callGeebar() {
         // 如果处于按压会话且达到会话上限，则停止自动连点并忽略本次调用
         if (isPressing && sessionClickTotal >= SESSION_MAX_PER_PRESS) {
@@ -126,8 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const newValue = currentCount + 1;
         gbarCountElement.textContent = newValue.toLocaleString();
         
-        // 更新可视化效果（每次点击都更新，提供即时反馈）
-        updateVisualization(newValue);
+        // 可视化更新改为在成功拉取最新主/次计数后统一渲染，避免点击瞬间大量网格闪烁
         
         // 更新本地存储的点击计数
         localClickCount++;
@@ -151,7 +236,49 @@ document.addEventListener('DOMContentLoaded', function() {
             if (CONFIG.mode === 'local') {
                 updateLocalData();
             } else {
-                sendApiRequest();
+                // 在API模式下，发送请求并检查阈值逻辑
+                const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.primaryCounter.id}&value=${clickCount}`;
+                
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data && data.success) {
+                            console.log('[API模式] 主计数增加成功');
+                            // 成功后主动拉取最新主/次计数再判断阈值
+                            return getPrimarySecondaryCounts().then(({ primary, secondary }) => {
+                                const effectiveThreshold = getEffectiveResetThreshold(secondary);
+                                if (primary >= effectiveThreshold) {
+                                    console.log('[API模式] 达到重置阈值，准备重置主计数器并增加第二计数器');
+                                    const resetUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.resetAction || 'reset'}&counter_id=${CONFIG.primaryCounter.id}`;
+                                    return fetch(resetUrl)
+                                        .then(r => r.json())
+                                        .then(resetData => {
+                                            if (resetData && resetData.success) {
+                                                console.log('[API模式] 主计数器重置成功');
+                                                return incrementSecondaryWithRetry().finally(() => loadApiCounters());
+                                            } else {
+                                                console.error('[API模式] 主计数器重置失败:', resetData ? resetData.message : '未知错误');
+                                                loadApiCounters();
+                                            }
+                                        })
+                                        .catch(err => {
+                                            console.error(`[API模式] 主计数器重置请求失败: ${err.message}`);
+                                            loadApiCounters();
+                                        });
+                                } else {
+                                    // 未达到阈值，直接刷新
+                                    loadApiCounters();
+                                }
+                            });
+                        } else {
+                            console.error('[API模式] 主计数更新失败:', data ? data.message : '未知错误');
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
+                        // 网络错误时使用本地数据
+                        // 保持现状，等待下次自动刷新
+                    });
             }
             clickCount = 0;
         }
@@ -168,7 +295,7 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.setItem('geebarLocalClicks', localClickCount);
         
         // 更新显示的数据
-        loadLocalGbarCount();
+        loadLocalCounters();
     }
     
     // 发送API请求更新计数（API模式）
@@ -178,25 +305,46 @@ document.addEventListener('DOMContentLoaded', function() {
         
         console.log(`[API模式] 发送API请求，增加点击数: ${count}`);
         
-        const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.api.key}&action=increment&counter_id=${CONFIG.api.counterId}&value=${count}`;
+        const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.primaryCounter.id}&value=${count}`;
         
         fetch(url)
             .then(response => response.json())
             .then(data => {
                 if (data && data.success) {
-                    console.log(`[API模式] API更新成功`);
-                    // API更新成功后，重新获取准确的计数值
-                    loadApiGbarCount();
+                    console.log('[API模式] 主计数增加成功');
+                    // 成功后主动拉取最新主/次计数再判断阈值
+                    return getPrimarySecondaryCounts().then(({ primary, secondary }) => {
+                        const effectiveThreshold = getEffectiveResetThreshold(secondary);
+                        if (primary >= effectiveThreshold) {
+                            console.log('[API模式] 达到重置阈值，准备重置主计数器并增加第二计数器');
+                            const resetUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.resetAction || 'reset'}&counter_id=${CONFIG.primaryCounter.id}`;
+                            return fetch(resetUrl)
+                                .then(r => r.json())
+                                .then(resetData => {
+                                    if (resetData && resetData.success) {
+                                        console.log('[API模式] 主计数器重置成功');
+                                        return incrementSecondaryWithRetry().finally(() => loadApiCounters());
+                                    } else {
+                                        console.error('[API模式] 主计数器重置失败:', resetData ? resetData.message : '未知错误');
+                                        loadApiCounters();
+                                    }
+                                })
+                                .catch(err => {
+                                    console.error(`[API模式] 主计数器重置请求失败: ${err.message}`);
+                                    loadApiCounters();
+                                });
+                        } else {
+                            // 未达到阈值，直接刷新
+                            loadApiCounters();
+                        }
+                    });
                 } else {
-                    console.error(`[API模式] API更新失败: ${data ? JSON.stringify(data) : '未知错误'}`);
-                    // 失败时也重新获取最新数据
-                    loadApiGbarCount();
+                    console.error('[API模式] 主计数更新失败:', data ? data.message : '未知错误');
                 }
             })
             .catch(error => {
-                console.error(`[API模式] API请求失败: ${error.message}`);
-                // 失败时重新获取最新数据
-                loadApiGbarCount();
+                console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
+                // 保持现状，等待下次自动刷新
             });
     }
     
@@ -236,10 +384,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加双击和长按支持
     let pressTimer;
     let autoClickInterval;
-    // 会话内限制：连续点击/长按单次会话最多+100
+    // 会话内限制：连续点击/长按单次会话最多+1000
     let isPressing = false;
     let sessionClickTotal = 0;
-    const SESSION_MAX_PER_PRESS = 100;
+    const SESSION_MAX_PER_PRESS = 1000;
     
     // 处理释放事件（鼠标或触摸）
     function handleRelease() {
@@ -368,6 +516,10 @@ document.addEventListener('DOMContentLoaded', function() {
             .energy-cell.filled {
                 box-shadow: 0 0 10px rgba(253, 45, 92, 0.7);
             }
+            .energy-cell.gold {
+                border-color: #f4c542 !important;
+                box-shadow: 0 0 10px rgba(244, 197, 66, 0.7);
+            }
             
             .energy-cell::after {
                 content: '';
@@ -428,7 +580,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const grid = document.getElementById('energy-grid');
         if (!grid) return;
         
-        // 每个格子代表1000点能量
+        // 每个格子代表10,000,000点能量
         const pointsPerCell = 10000000;
         // 每行5个格子
         const cellsPerRow = 5;
@@ -487,11 +639,82 @@ document.addEventListener('DOMContentLoaded', function() {
             grid.appendChild(cell);
         }
     }
+
+    // 新增：基于主/次计数组件更新可视化
+    function updateVisualizationFromComponents(primaryCount, secondaryCount) {
+        const grid = document.getElementById('energy-grid');
+        if (!grid) return;
+
+        const pointsPerCell = 10000000; // 10,000,000
+        const cellsPerRow = 5;
+        const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000; // 1,000,000,000
+        // 金色格单位直接等于 1,000,000,000（第二计数器每 +1 渲染 1 个金色格）
+        const goldCells = Math.max(0, Math.floor(secondaryCount));
+        const primaryFullCells = Math.floor(primaryCount / pointsPerCell);
+        const primaryPartial = (primaryCount % pointsPerCell) / pointsPerCell;
+
+        // 混合单位格子总数 = 金色格（以 1B 为单位）+ 红色满格 + 是否需要一个红色部分格
+        const redCellsNeeded = primaryFullCells + (primaryPartial > 0 ? 1 : 0);
+        const cellsNeeded = Math.max(1, goldCells + redCellsNeeded);
+        const rowsNeeded = Math.ceil(cellsNeeded / cellsPerRow);
+        const totalCells = rowsNeeded * cellsPerRow;
+
+        while (grid.firstChild) grid.removeChild(grid.firstChild);
+
+        for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'energy-cell';
+
+            if (i < goldCells) {
+                // 金色满格
+                cell.classList.add('gold');
+                const fill = document.createElement('div');
+                fill.style.position = 'absolute';
+                fill.style.top = '-5px';
+                fill.style.left = '0px';
+                fill.style.height = 'calc(100% + 10px)';
+                fill.style.width = '100%';
+                fill.style.backgroundColor = '#f4c542';
+                fill.style.transform = 'skewX(0deg)';
+                fill.style.transformOrigin = '0 0';
+                cell.appendChild(fill);
+            } else if (i < goldCells + primaryFullCells) {
+                // 红色满格（来自第一计数器）
+                cell.classList.add('filled');
+                cell.style.borderColor = '#fd2d5c';
+                const fill = document.createElement('div');
+                fill.style.position = 'absolute';
+                fill.style.top = '-5px';
+                fill.style.left = '0px';
+                fill.style.height = 'calc(100% + 10px)';
+                fill.style.width = '100%';
+                fill.style.backgroundColor = '#fd2d5c';
+                fill.style.transform = 'skewX(0deg)';
+                fill.style.transformOrigin = '0 0';
+                cell.appendChild(fill);
+            } else if (i === goldCells + primaryFullCells && primaryPartial > 0) {
+                // 红色部分填充格
+                const fill = document.createElement('div');
+                fill.style.position = 'absolute';
+                fill.style.top = '-5px';
+                fill.style.left = '0px';
+                fill.style.height = 'calc(100% + 10px)';
+                fill.style.width = `${primaryPartial * 100}%`;
+                fill.style.backgroundColor = '#fd2d5c';
+                fill.style.transform = 'skewX(0deg)';
+                fill.style.transformOrigin = '0 0';
+                cell.appendChild(fill);
+                cell.style.borderColor = '#fd2d5c';
+            }
+
+            grid.appendChild(cell);
+        }
+    }
     
     // 初始化可视化元素
     createVisualizationElements();
     
-    loadGbarCount();
+    loadCounters();
     
     // 添加复古风格的特效CSS
     const style = document.createElement('style');
@@ -517,14 +740,14 @@ document.addEventListener('DOMContentLoaded', function() {
     document.head.appendChild(style);
     
     // 添加定期自动更新功能
-    setInterval(loadGbarCount, CONFIG.autoUpdateInterval);
+    setInterval(loadCounters, CONFIG.autoUpdateInterval);
     
     // 添加模式切换UI（可选功能，可以在控制台手动调用）
     window.switchCounterMode = function(mode) {
         if (mode === 'local' || mode === 'api') {
             CONFIG.mode = mode;
             console.log(`模式已切换为: ${mode.toUpperCase()} 模式`);
-            loadGbarCount(); // 立即加载新模式的数据
+            loadCounters(); // 立即加载新模式的数据
             return true;
         }
         console.error('无效的模式参数，请使用 "local" 或 "api"');
@@ -535,18 +758,21 @@ document.addEventListener('DOMContentLoaded', function() {
     window.resetLocalClicks = function() {
         localClickCount = 0;
         localStorage.setItem('geebarLocalClicks', 0);
-        console.log('本地点击计数已重置');
+        console.log('本地主点击计数已重置');
         if (CONFIG.mode === 'local') {
-            loadLocalGbarCount();
+            loadLocalCounters();
         }
         return true;
     };
     
-    console.log('=== 计数器系统调试帮助 ===');
-    console.log('- 切换模式: window.switchCounterMode("local") 或 window.switchCounterMode("api")');
-    console.log('- 重置本地计数: window.resetLocalClicks()');
-    console.log('- 或使用URL参数: ?mode=local 或 ?mode=api');
-    console.log('=======================');
-
-    
+    // 调试函数：重置第二个计数器
+    window.resetLocalSecondaryClicks = function() {
+        localSecondaryCount = 0;
+        localStorage.setItem('geebarSecondaryClicks', 0);
+        console.log('本地第二计数器已重置');
+        if (CONFIG.mode === 'local') {
+            loadLocalCounters();
+        }
+        return true;
+    };
 });
