@@ -2,70 +2,76 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geebar 回忆</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Geebar</title>
+    <!-- Favicon 配置 -->
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="96x96" href="assets/favicon/favicon-96x96.png">
+<link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
+<link rel="icon" type="image/svg+xml" href="assets/favicon/favicon.svg">
+<link rel="manifest" href="assets/favicon/site.webmanifest">
+    <meta name="theme-color" content="#fd2d5c">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- 顶部容器 - 包含标题和上半部分文章 -->
-    <div class="container top-container">
-        <header>
-            <h1>⌈ＧＥＥＢＡＲ⌋</h1>
+    <!-- 标题和计时器部分 - 放在同一个黑背景框里 -->
+    <div class="container title-timer-container">
+        <header class="title-section">
+            <h1>ＧＥＥＢＡＲ</h1>
         </header>
         
-        <main>
-            <!-- GBAR召唤区 - 复古计算机风格 -->
-            <div class="counter-container">
-                <h3>🦅 雄鹰归巢 · 野狗聚首 🦅</h3>
-                <p>GBAR召唤能量: <span id="global-click-counter">0</span></p>
-                <button id="click-button" class="click-button">⚡ 呼叫GEEBAR ⚡</button>
-                <p class="counter-description">快来点击召唤Geebar!!!</p>
+        <div class="offline-timer">
+            <p class="timer-text">最后一次直播距今已有</p>
+            <p class="timer-text"><span id="offline-timer">00:00:00</span></p>
+        </div>
+        
+
+    </div>
+    
+    <!-- 移除之前的脚本 -->
+    
+    <!-- 图片部分 - 无黑背景 -->
+    <div class="image-section">
+        <img src="assets/img/geebar.png" alt="Geebar" class="separator-image">
+    </div>
+    
+    <!-- 点击器部分 - 带黑背景 -->
+    <div class="container clicker-container">
+        <!-- GBAR召唤区 - 复古计算机风格 -->
+        <div class="counter-container">
+            <h3> 雄鹰归巢 · 野狗聚首 </h3>
+            <!-- 能量网格将由JavaScript在这里自动插入 -->
+            <p>GBAR能量</p>
+            <p><span id="global-click-counter">0</span></p>
+            <button id="click-button" class="click-button">能量注入</button>
+            <p class="counter-description">点击重生Geebar!</p>
+        </div>
+    </div>
+    
+    <!-- 页脚部分 -->
+    <footer class="site-footer">
+        <p>geelain</p>
+        <div class="footer-info">
+            <div class="footer-section">
+                <p class="footer-section-title">作者信息 | Author</p>
+                <p class="footer-section-content"><a href="https://github.com/ZoZou02" target="_blank">zozou</a></p>
+                
             </div>
             
-            <article>
-                <h2>关于Geebar</h2>
-                <p>-geelain-</p>
-                <p>15.06.24</p>
-                <p>这是一个关于Geebar的回忆网站，记录了那些美好的时光和难忘的瞬间。</p>
-            </article>
-            
-            <article>
-                <h2>初次相遇</h2>
-                <p>-geelain-</p>
-                <p>10.05.24</p>
-                <p>还记得第一次见到Geebar的情景，那是一个阳光明媚的下午，一切都那么美好...</p>
-            </article>
-        </main>
-    </div>
-    
-    <!-- 分隔图片 - 完全放在container外部，直接显示在扫描线背景上 -->
-    <div class="background-separator">
-        <img src="asset/img/geebar.png" alt="Geebar" class="separator-image">
-    </div>
-    
-    <!-- 底部容器 - 包含下半部分文章和页脚 -->
-    <div class="container bottom-container">
-        <main>
-            <article>
-                <h2>共同的回忆</h2>
-                <p>-geelain-</p>
-                <p>05.04.24</p>
-                <p>我们一起经历了许多事情，有欢笑，有泪水，这些回忆将永远珍藏在心中。</p>
-            </article>
-            
-            <article>
-                <h2>未来的期待</h2>
-                <p>-geelain-</p>
-                <p>28.03.24</p>
-                <p>即使时光流逝，我们的故事还在继续，期待未来更多美好的回忆。</p>
-            </article>
-        </main>
-        
-        <footer>
-            <p>geebar memories</p>
-        </footer>
-    </div>
+            <div class="footer-section">
+                <p class="footer-section-title">灵感来源 | Inspired by</p>
+                <p class="footer-section-content"> <a href="https://fauux.neocities.orgzz" target="_blank">fauux.neocities.orgzz</a></p>
+            </div>
+            <div class="footer-section">
+                <p class="footer-section-title">内容声明 | Disclaimer</p>
+                <p class="footer-section-content">本网站仅供娱乐使用，非任何官方渠道或立场。页面素材可能包含二创或来源于公开网络，其版权归原作者所有。若有侵权或不当内容，请邮件联系处理：zozou0610@163.com。<br>
+                This site is for entertainment and non‑commercial community use only and is not an official channel. Materials may include fan-made or publicly sourced works; copyrights belong to their respective owners. Do not use the content for investment, commercial, or other serious purposes. For takedown or rights issues, contact: zozou0610@163.com.</p>
+            </div>
+        </div>
+    </footer>
     
     <script src="script.js"></script>
+    <script src="button_emoji_effect.js"></script>
+    <script src="counter_system.js"></script>
 </body>
 </html>

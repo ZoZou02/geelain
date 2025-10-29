@@ -1,584 +1,766 @@
-/* 复古计算机风格 */
-@font-face {
-    font-family: 'Pixel';
-    src: local('Courier New'), local('MS Gothic');
-}
+    /* 复古计算机风格 */
+    @font-face {
+        font-family: 'Pixel';
+        src: local('Courier New'), local('MS Gothic');
+    }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
 
-body {
-    font-family: 'Pixel', monospace;
-    background-color: #000;
-    color: #fff;
-    line-height: 1.6;
-    background-image: none;
-    position: relative;
-    overflow-x: hidden;
-    padding: 0;
-    margin: 40px 0; /* 添加上下外边距，露出扫描线背景 */
-    cursor: none;
-}
+    body {
+        font-family: 'Pixel', monospace;
+        background-color: #000;
+        color: #ffffff; 
+        line-height: 1.6;
+        background-image: none;
+        position: relative;
+        overflow-x: hidden;
+        padding: 0;
+        margin: 40px 0 0 0;
+        box-sizing: border-box;
+        max-width: 100vw;
+        overflow-y: auto;
+        min-height: 100vh;
+    }
 
-/* 扫描线效果 - 调整为纯水平线条，确保没有三角形效果 */
-body::after {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        0deg, /* 明确指定为0度，确保是水平方向 */
-        transparent 0px,
-        rgba(253, 45, 92, 0.3) 1px,
-        transparent 2px
-    );
-    background-size: 100% 1px; /* 增大扫描线间隔为3px */
-    background-position: 0 0;
-    pointer-events: none;
-    z-index: 99;
-}
-
-/* 蓝移线效果 - 优化消除边界 */
-body::before {
-    content: '';
-    position: fixed;
-    top: -200%; /* 大幅超出可视区域上方，确保无边界可见 */
-    left: 0;
-    width: 100%;
-    height: 400%; /* 大幅增加高度，确保无边界可见 */
-    background: repeating-linear-gradient(
-        0deg, /* 明确指定为0度，确保是水平方向 */
-        transparent 0px,
-        rgba(0, 225, 255, 0.5) 1px,
-        transparent 2px
-    );
-    background-size: 100% 3px; /* 增大扫描线间隔为3px */
-    background-repeat: repeat-y; /* 确保垂直方向重复 */
-    background-attachment: fixed; /* 固定背景位置 */
-    opacity: 0.7;
-    pointer-events: none;
-    z-index: 98;
-    animation: blueShift 24s linear infinite; /* 减慢速度 */
-}
-
-/* 红移线效果 - 优化消除边界 */
-.red-shift {
-    position: fixed;
-    bottom: -200%; /* 大幅超出可视区域下方，确保无边界可见 */
-    left: 0;
-    width: 100%;
-    height: 400%; /* 大幅增加高度，确保无边界可见 */
-    background: repeating-linear-gradient(
-        0deg, /* 明确指定为0度，确保是水平方向 */
-        transparent 0px,
-        rgba(255, 0, 60, 0.5) 1px,
-        transparent 2px
-    );
-    background-size: 100% 3px; /* 增大扫描线间隔为3px */
-    background-repeat: repeat-y; /* 确保垂直方向重复 */
-    background-attachment: fixed; /* 固定背景位置 */
-    opacity: 0.6;
-    pointer-events: none;
-    z-index: 97;
-    animation: redShift 100s linear infinite; /* 减慢速度 */
-}
-
-@keyframes blueShift {
-    0% {
-        transform: translateY(0);
-    }
-    100% {
-        transform: translateY(50%); /* 移动距离与元素高度匹配，确保平滑过渡无边界 */
-    }
-}
-
-@keyframes redShift {
-    0% {
-        transform: translateY(0);
-    }
-    100% {
-        transform: translateY(-50%); /* 移动距离与元素高度匹配，确保平滑过渡无边界 */
-    }
-}
-
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px 20px; /* 减少上下内边距 */
-    position: relative;
-    background-color: #000;
-    border: 1px solid #fd2d5c;
-    box-shadow: 0 0 20px rgba(253, 45, 92, 0.2);
-    z-index: 101; /* 确保内容在扫描线之上 */
-}
-
-/* 选中文字样式 */
-::selection {
-    background-color: #fd2d5c;
-    color: #fff;
-}
-
-/* Firefox 兼容 */
-::-moz-selection {
-    background-color: #fd2d5c;
-    color: #fff;
-}
-
-header {
-    margin-bottom: 40px;
-    text-align: center;
-}
-
-h1 {
-    font-size: 2rem;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    margin-bottom: 30px;
-    color: #fd2d5c;
-    /* 静态故障效果 - 使用多重文字阴影创建彩色故障感 */
-    text-shadow: 
-        0 0 5px #fd2d5c,
-        2px 0 0 rgba(255, 0, 0, 0.75),
-        -2px 0 0 rgba(0, 255, 255, 0.75),
-        0 2px 0 rgba(255, 0, 0, 0.5),
-        0 -2px 0 rgba(0, 255, 255, 0.5);
-    /* 添加间歇性抖动效果 - 每隔几秒抖动一次 */
-    animation: intermittentShake 3s infinite ease-in-out;
-}
-
-/* 间歇性抖动动画 - 大部分时间静止，偶尔抖动 */
-@keyframes intermittentShake {
-    /* 大部分时间保持静止（约2.8秒） */
-    0%, 93%, 100% {
-        transform: translateX(0);
-    }
-    /* 快速抖动效果（约0.2秒） */
-    94% {
-        transform: translateX(-1px);
-    }
-    95% {
-        transform: translateX(1px);
-    }
-    96% {
-        transform: translateX(-1px);
-    }
-    97% {
-        transform: translateX(1px);
-    }
-    98% {
-        transform: translateX(-0.5px);
-    }
-    99% {
-        transform: translateX(0.5px);
-    }
-}
-
-/* 分隔图片容器 - 直接放在背景上，无背景色 */
-.background-separator {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 50px 0;
-    /* 确保无背景色，显示扫描线 */
-    background: none;
-    position: relative;
-    z-index: 100; /* 确保图片在扫描线之上但在文章容器之下 */
-}
-
-/* 分隔图片样式 - 保留水平位移，移除垂直位移 */
-.separator-image {
-    /* 设置适当的最大宽度 */
-    max-width: 600px; /* 与文章容器宽度一致 */
-    height: auto;
-    /* 确保图片正确显示，特别是如果是透明背景 */
-    image-rendering: pixelated;
-    /* 故障效果基础样式 - 保留水平位移和滤镜变化 */
-    position: relative;
-    animation: glitchImage 5s infinite alternate-reverse;
-    filter: contrast(110%) saturate(110%);
-}
-
-/* 图片故障动画效果 - 保留水平位移，移除垂直位移 */
-@keyframes glitchImage {
-    0% {
-        transform: translate(0);
-        filter: contrast(110%) saturate(110%);
-    }
-    2% {
-        transform: translate(-2px, 0);
-        filter: hue-rotate(5deg) contrast(105%) saturate(95%);
-    }
-    4% {
-        transform: translate(1px, 0);
-        filter: hue-rotate(-5deg) contrast(115%) saturate(105%);
-    }
-    6% {
-        transform: translate(0);
-        filter: contrast(110%) saturate(110%);
-    }
-    10% {
-        transform: translate(0);
-        filter: contrast(110%) saturate(110%);
-    }
-    12% {
-        transform: translate(2px, 0);
-        filter: contrast(120%) saturate(90%);
-    }
-    14% {
-        transform: translate(-2px, 0);
-        filter: contrast(90%) saturate(120%);
-    }
-    16% {
-        transform: translate(0);
-        filter: contrast(110%) saturate(110%);
-    }
-    25% {
-        transform: translate(0);
-        filter: contrast(110%) saturate(110%);
-    }
-    27% {
-        transform: translate(0);
-        filter: contrast(100%) saturate(120%) hue-rotate(10deg);
-    }
-    29% {
-        transform: translate(0);
-        filter: contrast(120%) saturate(100%) hue-rotate(-10deg);
-    }
-    31% {
-        transform: translate(0);
-        filter: contrast(110%) saturate(110%);
-    }
-    100% {
-        transform: translate(0);
-        filter: contrast(110%) saturate(110%);
-    }
-}
-
-/* 故障效果额外层 - 保留水平RGB分离效果，移除垂直位移 */
-.background-separator::before,
-.background-separator::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-image: url('asset/img/geebar.png');
-    background-size: contain;
-    background-repeat: no-repeat;
-    background-position: center;
-    image-rendering: pixelated;
-    opacity: 0;
-    pointer-events: none;
-    animation: glitchRGB 5s infinite alternate-reverse;
-    z-index: 99;
-}
-
-.background-separator::before {
-    filter: hue-rotate(60deg);
-    mix-blend-mode: screen;
-}
-
-.background-separator::after {
-    filter: hue-rotate(-60deg);
-    mix-blend-mode: screen;
-}
-
-/* RGB故障效果 - 保留水平位移，移除垂直位移 */
-@keyframes glitchRGB {
-    0% {
-        opacity: 0;
-        transform: translate(0);
-    }
-    5% {
-        opacity: 0;
-    }
-    7% {
-        opacity: 0.5;
-        transform: translate(-3px, 0);
-    }
-    9% {
-        opacity: 0;
-        transform: translate(0);
-    }
-    15% {
-        opacity: 0;
-    }
-    17% {
-        opacity: 0.5;
-        transform: translate(3px, 0);
-    }
-    19% {
-        opacity: 0;
-        transform: translate(0);
-    }
-    30% {
-        opacity: 0;
-    }
-    32% {
-        opacity: 0.4;
-        transform: translate(0);
-    }
-    34% {
-        opacity: 0;
-        transform: translate(0);
-    }
-    40% {
-        opacity: 0;
-    }
-    42% {
-        opacity: 0.4;
-        transform: translate(0);
-    }
-    44% {
-        opacity: 0;
-        transform: translate(0);
-    }
-    65% {
-        opacity: 0;
-    }
-    67% {
-        opacity: 0.3;
-        transform: translate(-1px, 0);
-    }
-    69% {
-        opacity: 0;
-        transform: translate(0);
-    }
-    80% {
-        opacity: 0;
-    }
-    82% {
-        opacity: 0.3;
-        transform: translate(1px, 0);
-    }
-    84% {
-        opacity: 0;
-        transform: translate(0);
-    }
-    100% {
-        opacity: 0;
-    }
-}
-
-/* 容器间距调整 */
-.top-container {
-    margin-bottom: 0; /* 顶部容器与分隔图片之间无额外间距 */
-}
-
-.bottom-container {
-    margin-top: 0; /* 底部容器与分隔图片之间无额外间距 */
-}
-
-article {
-    margin-bottom: 30px;
-    position: relative;
-    padding: 20px;
-    border: 1px solid transparent;
-    transition: all 0.3s ease;
-    cursor: none;
-    background-color: rgba(0, 0, 0, 0.8);
-    border: 1px solid rgba(253, 45, 92, 0.1);
-}
-
-article:hover {
-    border-color: #fd2d5c;
-    background-color: rgba(253, 45, 92, 0.05);
-    /* 移除移动效果 */
-}
-
-h2 {
-    font-size: 1.2rem;
-    margin-bottom: 8px;
-    color: #fff;
-    text-shadow: none;
-    font-weight: normal;
-    transition: color 0.3s ease;
-}
-
-article:hover h2 {
-    color: #fd2d5c;
-}
-
-p {
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    color: #fff;
-}
-
-footer {
-    text-align: center;
-    padding: 30px 0 10px;
-    font-size: 0.8rem;
-    color: #fd2d5c;
-}
-
-/* 像素化图片效果 */
-.pixel-image {
-    image-rendering: pixelated;
-    image-rendering: -moz-crisp-edges;
-    image-rendering: crisp-edges;
-    max-width: 100%;
-    height: auto;
-    margin: 20px 0;
-    border: 2px solid #fff;
-    filter: grayscale(50%) contrast(120%) brightness(90%);
-}
-
-/* 复古滚动条 */
-::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: #000;
-    border: 1px solid #fff;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #fff;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #fd2d5c;
-}
-
-/* 移除闪烁效果，保持视觉稳定 */
-
-/* 响应式设计 */
-@media (max-width: 768px) {
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    h2 {
-        font-size: 1.3rem;
-    }
-    
-    .post {
-        padding: 15px;
-    }
-}
-
-/* 全局点击计数器样式 */
-.counter-container {
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 15px 20px;
-    margin-bottom: 25px;
-    border-left: 4px solid #fd2d5c;
-    border-right: 4px solid #fd2d5c;
-    color: #ffffff;
-    font-family: monospace;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    position: relative;
-    overflow: hidden;
-    text-align: center;
-}
-
-.counter-container::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(253, 45, 92, 0.1), transparent);
-    pointer-events: none;
-}
-
-.counter-description {
-    font-size: 0.9em;
-    opacity: 0.7;
-    margin-top: 5px;
-    letter-spacing: 0;
-    text-transform: none;
-}
-
-#global-click-counter {
-    color: #fd2d5c;
-    font-weight: bold;
-    font-size: 1.4em;
-    transition: all 0.2s ease;
-    text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
-}
-
-/* 点击按钮样式 */
-.click-button {
-    background-color: #fd2d5c;
-    color: #000000;
-    border: 2px solid #ffffff;
-    padding: 10px 20px;
-    margin: 10px 0;
-    font-family: monospace;
-    font-size: 1em;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    outline: none;
-}
-
-.click-button:hover {
-    background-color: #ffffff;
-    color: #fd2d5c;
-    border-color: #fd2d5c;
-    transform: scale(1.05);
-}
-
-.click-button:active {
-    transform: scale(0.95);
-}
-
-/* 计数器闪烁效果 - 故障风格 */
-.counter-flash {
-    animation: counterGlitch 0.3s ease-in-out;
-}
-
-@keyframes counterGlitch {
-    0%, 100% {
+    /* 全局链接样式，符合主题配色 */
+    a {
         color: #fd2d5c;
-        text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
-        transform: translateX(0);
+        text-decoration: none;
+        border-bottom: 1px solid rgba(253, 45, 92, 0.8);
+        transition: color 0.2s ease, border-color 0.2s ease, text-shadow 0.2s ease;
     }
-    20% {
+
+    a:hover {
         color: #ffffff;
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-        transform: translateX(-2px);
-    }
-    40% {
-        color: #fd2d5c;
+        border-bottom-color: #ffffff;
         text-shadow: 0 0 8px rgba(253, 45, 92, 0.8);
-        transform: translateX(2px);
     }
-    60% {
-        color: #ffffff;
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
-        transform: translateX(-1px);
-    }
-    80% {
-        color: #fd2d5c;
-        text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
-        transform: translateX(1px);
-    }
-}
 
-/* 干扰效果 */
-.interference {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
-    pointer-events: none;
-    opacity: 0.4;
-    z-index: 99;
-}
+    a:focus-visible {
+        outline: 2px dashed #fd2d5c;
+        outline-offset: 2px;
+    }
+
+    /* 扫描线效果 */
+    body::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            rgba(253, 45, 92, 0.3) 1px,
+            transparent 2px
+        );
+        background-size: 100% 1px;
+        background-position: 0 0;
+        pointer-events: none;
+        z-index: 99;
+    }
+
+    /* 蓝移线效果 */
+    body::before {
+        content: '';
+        position: fixed;
+        top: -200%;
+        left: 0;
+        width: 100%;
+        height: 400%;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            rgba(0, 225, 255, 0.5) 1px,
+            transparent 2px
+        );
+        background-size: 100% 3px;
+        background-repeat: repeat-y;
+        background-attachment: fixed;
+        opacity: 0.7;
+        pointer-events: none;
+        z-index: 98;
+        animation: blueShift 24s linear infinite;
+    }
+
+    /* 红移线效果 */
+    .red-shift {
+        position: fixed;
+        bottom: -200%;
+        left: 0;
+        width: 100%;
+        height: 400%;
+        background: repeating-linear-gradient(
+            0deg,
+            transparent 0px,
+            rgba(255, 0, 60, 0.5) 1px,
+            transparent 2px
+        );
+        background-size: 100% 3px;
+        background-repeat: repeat-y;
+        background-attachment: fixed;
+        opacity: 0.6;
+        pointer-events: none;
+        z-index: 97;
+        animation: redShift 100s linear infinite;
+    }
+
+    @keyframes blueShift {
+        0% {
+            transform: translateY(0);
+        }
+        100% {
+            transform: translateY(50%);
+        }
+    }
+
+    @keyframes redShift {
+        0% {
+            transform: translateY(0);
+        }
+        100% {
+            transform: translateY(-50%);
+        }
+    }
+
+    .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px 20px;
+        position: relative;
+        background-color: #000;
+        border: 1px solid #fd2d5c;
+        box-shadow: 0 0 20px rgba(253, 45, 92, 0.2);
+        z-index: 101;
+    }
+
+    /* 选中文字样式 */
+    ::selection {
+        background-color: #fd2d5c;
+        color: #fff;
+    }
+
+    ::-moz-selection {
+        background-color: #fd2d5c;
+        color: #fff;
+    }
+
+    header {
+        margin-bottom: 40px;
+        text-align: center;
+    }
+
+    /* 标题部分样式 */
+    .title-section h1 {
+        font-size: 3.4rem;
+        color: #fd2d5c;
+        letter-spacing: 2px;
+        transform: skew(-5deg);
+        margin: 0;
+        font-weight: bold;
+        text-shadow: 
+            0 0 8px #fd2d5c,
+            0 0 15px #fd2d5c,
+            2px 0 0 rgba(255, 0, 0, 0.9),
+            -2px 0 0 rgba(0, 255, 255, 0.9),
+            0 2px 0 rgba(255, 0, 0, 0.7),
+            0 -2px 0 rgba(0, 255, 255, 0.7);
+        animation: intermittentShake 3s infinite ease-in-out;
+    }
+
+    /* 间歇性抖动动画 */
+    @keyframes intermittentShake {
+        0%, 93%, 100% {
+            transform: translateX(0);
+        }
+        94% {
+            transform: translateX(-1px);
+        }
+        95% {
+            transform: translateX(1px);
+        }
+        96% {
+            transform: translateX(-1px);
+        }
+        97% {
+            transform: translateX(1px);
+        }
+        98% {
+            transform: translateX(-0.5px);
+        }
+        99% {
+            transform: translateX(0.5px);
+        }
+    }
+
+    /* 分隔图片容器 */
+    .background-separator {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 50px 0;
+        background: none;
+        position: relative;
+        z-index: 100;
+    }
+
+    /* 分隔图片样式 */
+    .separator-image {
+        max-width: 100%;
+        height: auto;
+        image-rendering: pixelated;
+        position: relative;
+        animation: glitchImage 2s infinite alternate-reverse;
+        filter: contrast(110%) saturate(110%);
+    }
+
+    /* 图片故障动画效果 */
+    @keyframes glitchImage {
+        0% {
+            transform: translate(0);
+            filter: contrast(110%) saturate(110%);
+        }
+        2% {
+            transform: translate(-2px, 0);
+            filter: hue-rotate(5deg) contrast(105%) saturate(95%);
+        }
+        4% {
+            transform: translate(1px, 0);
+            filter: hue-rotate(-5deg) contrast(115%) saturate(105%);
+        }
+        6% {
+            transform: translate(0);
+            filter: contrast(110%) saturate(110%);
+        }
+        10% {
+            transform: translate(0);
+            filter: contrast(110%) saturate(110%);
+        }
+        12% {
+            transform: translate(2px, 0);
+            filter: contrast(120%) saturate(90%);
+        }
+        14% {
+            transform: translate(-2px, 0);
+            filter: contrast(90%) saturate(120%);
+        }
+        16% {
+            transform: translate(0);
+            filter: contrast(110%) saturate(110%);
+        }
+        25% {
+            transform: translate(0);
+            filter: contrast(110%) saturate(110%);
+        }
+        27% {
+            transform: translate(0);
+            filter: contrast(100%) saturate(120%) hue-rotate(10deg);
+        }
+        29% {
+            transform: translate(0);
+            filter: contrast(120%) saturate(100%) hue-rotate(-10deg);
+        }
+        31% {
+            transform: translate(0);
+            filter: contrast(110%) saturate(110%);
+        }
+        100% {
+            transform: translate(0);
+            filter: contrast(110%) saturate(110%);
+        }
+    }
+
+    /* 容器间距调整 */
+    .top-container {
+        margin-bottom: 0;
+    }
+
+    .bottom-container {
+        margin-top: 0;
+    }
+
+    article {
+        margin-bottom: 30px;
+        position: relative;
+        padding: 20px;
+        border: 1px solid transparent;
+        transition: all 0.3s ease;
+        background-color: rgba(0, 0, 0, 0.8);
+        border: 1px solid rgba(253, 45, 92, 0.1);
+    }
+
+    article:hover {
+        border-color: #fd2d5c;
+        background-color: rgba(253, 45, 92, 0.05);
+    }
+
+    h2 {
+        font-size: 1.2rem;
+        margin-bottom: 8px;
+        color: #ffffff;
+        text-shadow: none;
+        font-weight: normal;
+        transition: color 0.3s ease;
+    }
+
+    article:hover h2 {
+        color: #fd2d5c;
+    }
+
+    p {
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        color: #ffffff;
+    }
+
+    /* 标题和计时器容器样式 */
+    .title-timer-container {
+        text-align: center;
+        position: relative;
+        z-index: 101;
+    }
+
+    .offline-timer {
+        padding: 0;
+        margin: 0;
+        font-family: 'Pixel', monospace;
+    }
+
+    .offline-timer p {
+        margin: 5px 0;
+        color: #ffffff;
+        font-size: 0.9rem;
+    }
+
+    #offline-timer {
+        font-size: 3rem;
+        color: #fd2d5c;
+        letter-spacing: 2px;
+        transform: skew(-5deg);
+        margin: 0;
+        font-weight: bold;
+        text-shadow: 
+            0 0 8px #fd2d5c,
+            0 0 15px #fd2d5c,
+            2px 0 0 rgba(255, 0, 0, 0.9),
+            -2px 0 0 rgba(0, 255, 255, 0.9),
+            0 2px 0 rgba(255, 0, 0, 0.7),
+            0 -2px 0 rgba(0, 255, 255, 0.7);
+        display: inline-block;
+        animation: intermittentShake 3s infinite ease-in-out;
+        min-width: 120px;
+    }
+
+    /* 为"时"、"分"、"秒"汉字设置白色样式 */
+    .timer-unit {
+        color: #ffffff; /* 白色 */
+        text-shadow: 
+            0 0 10px #fd2d5c,
+            0 0 15px #fd2d5c,
+            2px 0 0 rgba(255, 0, 0, 0.9),
+            -2px 0 0 rgba(0, 255, 255, 0.9);
+    }
+
+    /* 计时器文本样式 */
+    .timer-text {
+        font-family: 'Pixel', monospace;
+        font-size: 1.2rem;
+        color: #ffffff; 
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 
+            0 0 10px #fd2d5c,
+            0 0 15px #fd2d5c,
+            2px 0 0 rgba(255, 0, 0, 0.9),
+            -2px 0 0 rgba(0, 255, 255, 0.9);
+        margin: 10px 0 0 0;
+    }
+
+    /* 图片部分样式 */
+    .image-section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 0 auto 40px;
+        width: 100%;
+        position: relative;
+        z-index: 100;
+    }
+
+    /* 点击器容器样式 */
+    .clicker-container {
+        margin: 20px auto 40px;
+    }
+
+    /* 页脚样式 */
+    .site-footer {
+        text-align: center;
+        padding: 15px;
+        font-size: 0.7rem;
+        color: #666;
+        position: relative;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 100;
+        background-color: #0a0a0a;
+        margin-top: 40px;
+        border-top: 2px solid #fd2d5c;
+        box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.8);
+    }
+
+    .site-footer p:first-child {
+        color: #fd2d5c;
+        font-weight: bold;
+        margin-bottom: 8px;
+        font-size: 0.85rem;
+    }
+
+    .footer-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-width: 100%;
+        margin: 5px auto 0;
+        text-align: center;
+    }
+
+    .footer-section {
+        margin-bottom: 5px;
+        padding: 5px;
+        border: 1px solid #1a1a1a;
+        background-color: #050505;
+        border-radius: 2px;
+    }
+
+    .footer-section-title {
+        font-weight: bold;
+        color: #fd2d5c;
+        margin-bottom: 3px;
+        font-size: 0.8rem;
+        display: block;
+    }
+
+    .footer-section-content {
+        color: #ffffff; 
+        font-size: 0.75rem;
+        line-height: 1.3;
+        display: block;
+    }
+
+    /* 页脚链接样式 */
+    .footer-section-content a {
+        color: #fd2d5c;
+        text-decoration: none;
+        border-bottom: 1px solid #fd2d5c;
+        transition: all 0.3s ease;
+    }
+
+    .footer-section-content a:hover {
+        color: #ffffff;
+        border-bottom-color: #ffffff;
+        text-shadow: 0 0 8px #fd2d5c;
+    }
+
+    /* 像素化图片效果 */
+    .pixel-image {
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+        max-width: 100%;
+        height: auto;
+        margin: 20px 0;
+        border: 2px solid #ffffff; 
+        filter: grayscale(50%) contrast(120%) brightness(90%);
+    }
+
+    /* 复古滚动条 */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #000;
+        border: 1px solid #fd2d5c; 
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #fd2d5c; 
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #fd2d5c;
+    }
+
+    /* 全局点击计数器样式 */
+    .counter-container {
+        padding: 15px 20px;
+        margin-bottom: 25px;
+        border-left: 4px solid #fd2d5c;
+        border-right: 4px solid #fd2d5c;
+        font-family: 'Pixel', monospace;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        text-align: center;
+    }
+
+    .counter-description {
+        font-size: 0.9em;
+        opacity: 0.7;
+        margin-top: 5px;
+        letter-spacing: 0;
+        text-transform: none;
+        margin-bottom: 10px;
+        line-height: 1.4;
+        text-align: center;
+        color: #ffffff; 
+    }
+
+    #global-click-counter {
+        color: #fd2d5c;
+        font-weight: bold;
+        font-size: 2.2rem;
+        transition: all 0.2s ease;
+        text-shadow: 
+            0 0 8px rgba(253, 45, 92, 0.8),
+            0 0 15px rgba(253, 45, 92, 0.6);
+        display: block;
+        margin: 15px 0;
+        text-align: center;
+    }
+
+    /* 点击按钮样式 */
+    .click-button {
+        background-color: #fd2d5c;
+        color: #000000;
+        border: 2px solid #ffffff; 
+        padding: 12px 24px;
+        margin: 10px 0;
+        font-family: 'Pixel', monospace;
+        font-size: 1.1em;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        transition: all 0.2s ease;
+        outline: none;
+        text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+
+    .click-button:hover {
+        background-color: #ffffff;
+        color: #fd2d5c;
+        border-color: #fd2d5c;
+        transform: scale(1.05);
+    }
+
+    .click-button:active {
+        transform: scale(0.95);
+    }
+
+    /* 计数器闪烁效果 - 故障风格 */
+    .counter-flash {
+        animation: counterGlitch 0.3s ease-in-out;
+    }
+
+    @keyframes counterGlitch {
+        0%, 100% {
+            color: #fd2d5c;
+            text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
+            transform: translateX(0);
+        }
+        20% {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            transform: translateX(-2px);
+        }
+        40% {
+            color: #fd2d5c;
+            text-shadow: 0 0 8px rgba(253, 45, 92, 0.8);
+            transform: translateX(2px);
+        }
+        60% {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            transform: translateX(-1px);
+        }
+        80% {
+            color: #fd2d5c;
+            text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
+            transform: translateX(1px);
+        }
+    }
+
+    /* 干扰效果 */
+    .interference {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+        pointer-events: none;
+        opacity: 0.4;
+        z-index: 99;
+    }
+
+    /* 响应式设计 - 不同屏幕尺寸的样式调整 */
+
+    /* 超大屏幕 - 桌面显示器和电视 (1600px+) */
+    @media (min-width: 1600px) {
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 30px 30px;
+        }
+        
+        .title-section h1 {
+            font-size: 3.2rem;
+        }
+        
+        h2 {
+            font-size: 1.8rem;
+        }
+        
+        p {
+            font-size: 1.1rem;
+        }
+    }
+
+    /* 大屏幕 - 大屏幕桌面显示器 (1200px-1599px) */
+    @media (min-width: 1200px) and (max-width: 1599px) {
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            padding: 25px 25px;
+        }
+        
+        .title-section h1 {
+            font-size: 2.9rem;
+        }
+        
+        h2 {
+            font-size: 1.6rem;
+        }
+    }
+
+    /* 中等屏幕 - 标准桌面显示器 (992px-1199px) */
+    @media (min-width: 992px) and (max-width: 1199px) {
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 22px 22px;
+        }
+        
+        .title-section h1 {
+            font-size: 2.6rem;
+        }
+        
+        h2 {
+            font-size: 1.4rem;
+        }
+    }
+
+    /* 小屏幕 - 笔记本电脑和平板 (768px-991px) */
+    @media (min-width: 768px) and (max-width: 991px) {
+        .container {
+            max-width: 85%;
+            margin: 0 auto;
+            background-color: rgba(0, 0, 0, 0.75);
+            padding: 20px 20px;
+        }
+        
+        .title-section h1 {
+            font-size: 2.4rem;
+        }
+        
+        h2 {
+            font-size: 1.3rem;
+        }
+        
+        .separator-image {
+            max-width: 80%;
+        }
+    }
+
+    /* 平板竖屏和大屏手机 (576px-767px) */
+    @media (min-width: 576px) and (max-width: 767px) {
+        .container {
+            max-width: 90%;
+            margin: 0 auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 18px 18px;
+        }
+        
+        .title-section h1 {
+            font-size: 2.2rem;
+        }
+        
+        h2 {
+            font-size: 1.2rem;
+        }
+    }
+
+    /* 标准手机 (376px-575px) */
+    @media (min-width: 376px) and (max-width: 575px) {
+        .container {
+            max-width: 95%;
+            margin: 0 8px;
+            background-color: rgba(0, 0, 0, 0.65);
+            padding: 15px 15px;
+            border: 1px solid #fd2d5c;
+        }
+        
+        .title-section h1 {
+            font-size: 2.4rem;
+            letter-spacing: 1px;
+        }
+        
+        h2 {
+            font-size: 1.15rem;
+        }
+        
+        p {
+            font-size: 0.9rem;
+        }
+    }
+
+    /* 小屏手机 (320px-375px) */
+    @media (min-width: 320px) and (max-width: 375px) {
+        .container {
+            max-width: 100%;
+            margin: 0 5px;
+            background-color: rgba(0, 0, 0, 0.6);
+            padding: 12px 12px;
+            border: 1px solid #fd2d5c;
+        }
+        
+        body {
+            margin: 20px 0;
+        }
+        
+        .title-section h1 {
+            font-size: 2.2rem;
+            letter-spacing: 0.5px;
+        }
+        
+        h2 {
+            font-size: 1.1rem;
+        }
+        
+        p {
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+        }
+        
+        .separator-image {
+            max-width: 70%;
+        }
+    }
