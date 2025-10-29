@@ -5,19 +5,75 @@ document.addEventListener('DOMContentLoaded', function() {
     // GBAR召唤功能
     const gbarCountElement = document.getElementById('global-click-counter');
     const gbarButton = document.getElementById('click-button');
-    const apiKey = '6c18b0cafb24205829af9e2fb75c3a2a';
-    const counterId = '6200f7021fe890c7f925ff27cf10cabd';
     
-    // 点击计数器，控制API请求频率
+    // 模式切换配置 - 可以通过URL参数或直接修改此处切换模式
+    // 从URL参数获取模式设置（例如：?mode=api 或 ?mode=local）
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlMode = urlParams.get('mode');
+    
+    // 配置参数
+    const CONFIG = {
+        // 默认模式: 'local' (本地测试) 或 'api' (API模式)
+        mode: urlMode === 'api' ? 'api' : 'local',
+        
+        // API模式配置
+        api: {
+            key: '6c18b0cafb24205829af9e2fb75c3a2a',
+            counterId: '6200f7021fe890c7f925ff27cf10cabd',
+            baseUrl: 'https://js.ruseo.cn/api/counter.php'
+        },
+        
+        // 本地测试模式配置
+        local: {
+            baseCount: 208000, // 模拟的基础计数值
+            randomVariation: 500 // 随机变化范围
+        },
+        
+        // 通用配置
+        clickThreshold: 5, // 点击阈值，达到后更新数据
+        autoUpdateInterval: 10000 // 自动更新间隔(毫秒)
+    };
+    
+    // 显示当前模式信息
+    console.log(`当前运行模式: ${CONFIG.mode.toUpperCase()} 模式`);
+    
+    // 点击计数器，控制数据更新频率
     let clickCount = 0;
-    const apiRequestThreshold = 5;
     
-    // 初始化全局点击计数器（本地存储）
-    let globalClicks = localStorage.getItem('geebarGlobalClicks') ? parseInt(localStorage.getItem('geebarGlobalClicks')) : 0;
+    // 初始化本地点击计数器（本地存储）
+    let localClickCount = localStorage.getItem('geebarLocalClicks') ? parseInt(localStorage.getItem('geebarLocalClicks')) : 0;
     
-    // 初始加载GBAR召唤能量
+    // 加载GBAR召唤能量 - 根据模式选择不同的加载方式
     function loadGbarCount() {
-        const url = `https://js.ruseo.cn/api/counter.php?api_key=${apiKey}&action=get&counter_id=${counterId}`;
+        if (CONFIG.mode === 'local') {
+            loadLocalGbarCount();
+        } else {
+            loadApiGbarCount();
+        }
+    }
+    
+    // 加载本地测试模式的GBAR召唤能量
+    function loadLocalGbarCount() {
+        // 本地模式：使用本地存储的点击数 + 基础计数 + 模拟的其他用户点击
+        const simulatedOtherUsers = Math.floor(Math.random() * CONFIG.local.randomVariation);
+        const totalCount = CONFIG.local.baseCount + localClickCount + simulatedOtherUsers;
+        
+        // 更新显示
+        gbarCountElement.textContent = totalCount.toLocaleString();
+        
+        // 添加数字变化动画
+        gbarCountElement.classList.add('counter-flash');
+        setTimeout(() => gbarCountElement.classList.remove('counter-flash'), 500);
+        
+        // 更新可视化效果
+        updateVisualization(totalCount);
+        
+        console.log(`[本地模式] 当前计数: ${totalCount} (基础: ${CONFIG.local.baseCount}, 本地点击: ${localClickCount}, 模拟其他用户: ${simulatedOtherUsers})`);
+    }
+    
+    // 加载API模式的GBAR召唤能量
+    function loadApiGbarCount() {
+        const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.api.key}&action=get&counter_id=${CONFIG.api.counterId}`;
         
         fetch(url)
             .then(response => response.json())
@@ -31,24 +87,39 @@ document.addEventListener('DOMContentLoaded', function() {
                         setTimeout(() => gbarCountElement.classList.remove('counter-flash'), 500);
                         // 更新可视化效果
                         updateVisualization(count);
+                        console.log(`[API模式] 成功加载计数: ${count}`);
                     } else {
-                        gbarCountElement.textContent = '0';
-                        updateVisualization(0);
+                        handleApiError('计数数据无效');
                     }
                 } else {
-                    gbarCountElement.textContent = '0';
-                    updateVisualization(0);
+                    handleApiError('未返回有效数据');
                 }
             })
             .catch(error => {
-                console.error('加载GBAR能量失败:', error);
-                gbarCountElement.textContent = '0';
-                updateVisualization(0);
+                handleApiError(`API请求失败: ${error.message}`);
             });
+    }
+    
+    // 处理API错误，回退到本地模式临时显示
+    function handleApiError(errorMsg) {
+        console.error(`[API模式] ${errorMsg}`);
+        
+        // 临时使用本地数据作为显示
+        const fallbackCount = CONFIG.local.baseCount + localClickCount;
+        gbarCountElement.textContent = fallbackCount.toLocaleString();
+        updateVisualization(fallbackCount);
+        
+        console.log(`[API模式] 临时使用本地数据显示: ${fallbackCount}`);
     }
     
     // 呼叫GBAR - 优化版本，支持快速连续点击
     function callGeebar() {
+        // 如果处于按压会话且达到会话上限，则停止自动连点并忽略本次调用
+        if (isPressing && sessionClickTotal >= SESSION_MAX_PER_PRESS) {
+            if (autoClickInterval) clearInterval(autoClickInterval);
+            return;
+        }
+
         // 立即更新本地显示（+1），提供即时反馈
         const currentCount = parseInt(gbarCountElement.textContent.replace(/,/g, '')) || 0;
         const newValue = currentCount + 1;
@@ -58,38 +129,73 @@ document.addEventListener('DOMContentLoaded', function() {
         updateVisualization(newValue);
         
         // 更新本地存储的点击计数
-        globalClicks++;
-        localStorage.setItem('geebarGlobalClicks', globalClicks);
+        localClickCount++;
+        localStorage.setItem('geebarLocalClicks', localClickCount);
         
         createCallEffect();
         
         // 增加点击计数
         clickCount++;
+        // 会话内累计计数（仅在按压会话中统计）
+        if (isPressing) {
+            sessionClickTotal++;
+            // 如果刚好达到上限，立即停止自动连点
+            if (sessionClickTotal >= SESSION_MAX_PER_PRESS && autoClickInterval) {
+                clearInterval(autoClickInterval);
+            }
+        }
         
-        // 控制API请求频率，避免过于频繁的请求
-        if (clickCount >= apiRequestThreshold) {
-            sendApiRequest();
+        // 达到阈值时更新数据（根据模式选择不同的更新方式）
+        if (clickCount >= CONFIG.clickThreshold) {
+            if (CONFIG.mode === 'local') {
+                updateLocalData();
+            } else {
+                sendApiRequest();
+            }
             clickCount = 0;
         }
     }
     
-    // 发送API请求更新计数
-    function sendApiRequest(count = apiRequestThreshold) {
+    // 更新本地数据（本地测试模式）
+    function updateLocalData(count = CONFIG.clickThreshold) {
+        // 如果没有要更新的计数，直接返回
+        if (count <= 0) return;
+        
+        console.log(`[本地模式] 更新本地数据，增加点击数: ${count}`);
+        
+        // 保存到本地存储（已经在callGeebar中实时更新了，这里可以做一些额外的处理）
+        localStorage.setItem('geebarLocalClicks', localClickCount);
+        
+        // 更新显示的数据
+        loadLocalGbarCount();
+    }
+    
+    // 发送API请求更新计数（API模式）
+    function sendApiRequest(count = CONFIG.clickThreshold) {
         // 如果没有要发送的计数，直接返回
         if (count <= 0) return;
         
-        const url = `https://js.ruseo.cn/api/counter.php?api_key=${apiKey}&action=increment&counter_id=${counterId}&value=${count}`;
+        console.log(`[API模式] 发送API请求，增加点击数: ${count}`);
+        
+        const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.api.key}&action=increment&counter_id=${CONFIG.api.counterId}&value=${count}`;
         
         fetch(url)
             .then(response => response.json())
             .then(data => {
-                // API更新成功后，重新获取准确的计数值
-                loadGbarCount();
+                if (data && data.success) {
+                    console.log(`[API模式] API更新成功`);
+                    // API更新成功后，重新获取准确的计数值
+                    loadApiGbarCount();
+                } else {
+                    console.error(`[API模式] API更新失败: ${data ? JSON.stringify(data) : '未知错误'}`);
+                    // 失败时也重新获取最新数据
+                    loadApiGbarCount();
+                }
             })
             .catch(error => {
-                console.error('更新GBAR召唤能量失败:', error);
+                console.error(`[API模式] API请求失败: ${error.message}`);
                 // 失败时重新获取最新数据
-                loadGbarCount();
+                loadApiGbarCount();
             });
     }
     
@@ -129,21 +235,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加双击和长按支持
     let pressTimer;
     let autoClickInterval;
+    // 会话内限制：连续点击/长按单次会话最多+100
+    let isPressing = false;
+    let sessionClickTotal = 0;
+    const SESSION_MAX_PER_PRESS = 100;
     
     // 处理释放事件（鼠标或触摸）
     function handleRelease() {
         clearTimeout(pressTimer);
         clearInterval(autoClickInterval);
+        autoClickInterval = null;
+        isPressing = false;
         
-        // 停止点击或长按后，立即发送剩余的点击次数
+        // 停止点击或长按后，立即更新剩余的点击次数
         if (clickCount > 0) {
-            sendApiRequest(clickCount); // 发送实际的点击次数
+            if (CONFIG.mode === 'local') {
+                updateLocalData(clickCount); // 本地模式：更新本地数据
+            } else {
+                sendApiRequest(clickCount); // API模式：发送API请求
+            }
             clickCount = 0; // 重置计数器
         }
+        // 重置会话累计
+        sessionClickTotal = 0;
     }
     
     // 鼠标事件
     gbarButton.addEventListener('mousedown', () => {
+        isPressing = true;
+        sessionClickTotal = 0;
         // 长按开始自动点击
         pressTimer = setTimeout(() => {
             autoClickInterval = setInterval(callGeebar, 100); // 每100ms自动点击一次
@@ -160,6 +280,8 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault(); // 阻止默认行为，防止触摸时页面滚动和触发点击事件
         }
         
+        isPressing = true;
+        sessionClickTotal = 0;
         // 立即执行一次点击（确保点击有反馈）
         callGeebar();
         
@@ -393,7 +515,37 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
     
-    // 添加定期自动更新功能，每30秒更新一次
-    setInterval(loadGbarCount, 10000);
+    // 添加定期自动更新功能
+    setInterval(loadGbarCount, CONFIG.autoUpdateInterval);
+    
+    // 添加模式切换UI（可选功能，可以在控制台手动调用）
+    window.switchCounterMode = function(mode) {
+        if (mode === 'local' || mode === 'api') {
+            CONFIG.mode = mode;
+            console.log(`模式已切换为: ${mode.toUpperCase()} 模式`);
+            loadGbarCount(); // 立即加载新模式的数据
+            return true;
+        }
+        console.error('无效的模式参数，请使用 "local" 或 "api"');
+        return false;
+    };
+    
+    // 调试函数：重置本地点击计数
+    window.resetLocalClicks = function() {
+        localClickCount = 0;
+        localStorage.setItem('geebarLocalClicks', 0);
+        console.log('本地点击计数已重置');
+        if (CONFIG.mode === 'local') {
+            loadLocalGbarCount();
+        }
+        return true;
+    };
+    
+    console.log('=== 计数器系统调试帮助 ===');
+    console.log('- 切换模式: window.switchCounterMode("local") 或 window.switchCounterMode("api")');
+    console.log('- 重置本地计数: window.resetLocalClicks()');
+    console.log('- 或使用URL参数: ?mode=local 或 ?mode=api');
+    console.log('=======================');
+
     
 });
