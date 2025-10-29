@@ -1,4 +1,4 @@
-// 基于按钮位置的表情包弹出效果 - 独立实现
+// 基于按钮位置的表情包弹出效果
 
 // 等待DOM加载完成
 window.addEventListener('DOMContentLoaded', function() {

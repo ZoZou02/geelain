@@ -203,7 +203,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // 将可视化容器插入到计数器容器中
         const counterContainer = document.querySelector('.counter-container');
         if (counterContainer) {
-            // 插入到标题h3之后，能量文本p之前
             const titleElement = counterContainer.querySelector('h3');
             if (titleElement) {
                 counterContainer.insertBefore(gridContainer, titleElement.nextSibling);
