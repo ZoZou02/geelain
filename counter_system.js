@@ -375,10 +375,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // 添加双击和长按支持
     let pressTimer;
     let autoClickInterval;
-    // 会话内限制：连续点击/长按单次会话最多+1000
+    // 会话内限制：连续点击/长按单次会话最多+1000000
     let isPressing = false;
     let sessionClickTotal = 0;
-    const SESSION_MAX_PER_PRESS = 1000;
+    const SESSION_MAX_PER_PRESS = 1000000;
     
     // 处理释放事件（鼠标或触摸）
     function handleRelease() {
