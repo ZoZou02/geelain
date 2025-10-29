@@ -2,7 +2,6 @@
 
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', function() {
-    // GBAR召唤功能
     const gbarCountElement = document.getElementById('global-click-counter');
     const gbarButton = document.getElementById('click-button');
     
@@ -266,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionClickTotal = 0;
         // 长按开始自动点击
         pressTimer = setTimeout(() => {
-            autoClickInterval = setInterval(callGeebar, 100); // 每100ms自动点击一次
+            autoClickInterval = setInterval(callGeebar, 1000); // 每1000ms自动点击一次
         }, 500); // 按下500ms后开始自动点击
     });
     
@@ -428,7 +427,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!grid) return;
         
         // 每个格子代表1000点能量
-        const pointsPerCell = 1000;
+        const pointsPerCell = 10000000;
         // 每行5个格子
         const cellsPerRow = 5;
         // 计算需要的格子数量
