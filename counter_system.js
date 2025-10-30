@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 获取计数器元素
     const gbarCountElement = document.getElementById('global-click-counter');
     const gbarButton = document.getElementById('click-button');
+
+
     
     
     // 从URL参数获取模式设置（例如：?mode=api 或 ?mode=local）
@@ -201,19 +203,22 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // 立即更新本地显示（+1），提供即时反馈
+        // 计算本次点击的能量值（考虑长按倍数）
+        const energy = calculateClickEnergy();
+        
+        // 立即更新本地显示，提供即时反馈
         const currentCount = parseInt(gbarCountElement.textContent.replace(/,/g, '')) || 0;
-        const newValue = currentCount + 1;
+        const newValue = currentCount + energy;
         gbarCountElement.textContent = newValue.toLocaleString();
         
         // 更新本地存储的点击计数
-        localClickCount++;
+        localClickCount += energy;
         localStorage.setItem('geebarLocalClicks', localClickCount);
         
         createCallEffect();
         
         // 增加点击计数
-        clickCount++;
+        clickCount += energy;
         // 会话内累计计数（仅在按压会话中统计）
         if (isPressing) {
             sessionClickTotal++;
@@ -223,12 +228,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
+
+        
+
+        
         // 达到阈值时更新数据（根据模式选择不同的更新方式）
         if (clickCount >= CONFIG.clickThreshold) {
             if (CONFIG.mode === 'local') {
                 updateLocalData();
             } else {
                 // 在API模式下，发送请求并检查阈值逻辑
+                console.log(`[API模式] 发送API请求，增加点击数: ${clickCount}`);
                 const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.primaryCounter.id}&value=${clickCount}`;
                 
                 fetch(url)
@@ -339,6 +349,79 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    // 计算长按倍数
+    function calculateLongPressMultiplier() {
+        if (!CONFIG.funFeatures?.longPressAcceleration?.enabled || !isPressing || pressStartTime === 0) {
+            return 1;
+        }
+        
+        const pressDuration = Date.now() - pressStartTime;
+        const timeMultipliers = CONFIG.funFeatures.longPressAcceleration.timeMultipliers;
+        
+        // 找到对应的长按倍数
+        let multiplier = 1;
+        for (let i = timeMultipliers.length - 1; i >= 0; i--) {
+            if (pressDuration >= timeMultipliers[i].time) {
+                multiplier = timeMultipliers[i].multiplier;
+                break;
+            }
+        }
+        
+        // 限制最大倍数
+        const maxMultiplier = CONFIG.funFeatures.longPressAcceleration.maxMultiplier;
+        return Math.min(multiplier, maxMultiplier);
+    }
+    
+    // 更新长按加速
+    function updateLongPressAcceleration() {
+        if (!CONFIG.funFeatures?.longPressAcceleration?.enabled || !isPressing) return;
+        
+        const pressDuration = Date.now() - pressStartTime;
+        const config = CONFIG.funFeatures.longPressAcceleration;
+        
+        // 计算新的点击间隔 (随时间减少，但不低于最小值)
+        const newInterval = Math.max(
+            config.minInterval,
+            config.baseInterval * Math.pow(1 - config.accelerationRate, pressDuration / 100)
+        );
+        
+        // 如果间隔时间有显著变化，更新定时器
+        if (Math.abs(newInterval - currentClickInterval) > 1 && autoClickInterval) {
+            clearInterval(autoClickInterval);
+            currentClickInterval = newInterval;
+            autoClickInterval = setInterval(() => {
+                if (sessionClickTotal < SESSION_MAX_PER_PRESS) {
+                    callGeebar();
+                } else {
+                    clearInterval(autoClickInterval);
+                    autoClickInterval = null;
+                }
+            }, currentClickInterval);
+        }
+        
+        // 更新长按倍数
+        currentLongPressMultiplier = calculateLongPressMultiplier();
+    }
+    
+    // 计算点击能量
+    function calculateClickEnergy() {
+        // 基础能量为1
+        let energy = 1;
+        
+        // 如果启用了长按加速功能且正在按压，应用长按倍数
+        if (CONFIG.funFeatures?.longPressAcceleration?.enabled && isPressing && pressStartTime > 0) {
+            const multiplier = calculateLongPressMultiplier();
+            energy = Math.floor(energy * multiplier);
+        }
+        
+        return Math.max(1, energy); // 确保最小能量为1
+    }
+    
+
+    
+
+    
+    
     // 创建特效
     function createCallEffect() {
         const rect = gbarButton.getBoundingClientRect();
@@ -379,13 +462,27 @@ document.addEventListener('DOMContentLoaded', function() {
     let isPressing = false;
     let sessionClickTotal = 0;
     const SESSION_MAX_PER_PRESS = 1000000;
+    // 长按加速相关变量
+    let pressStartTime = 0; // 按压开始时间
+    let currentClickInterval = CONFIG.funFeatures?.longPressAcceleration?.baseInterval || 100; // 当前点击间隔
+    let currentLongPressMultiplier = 1; // 当前长按倍数
     
     // 处理释放事件（鼠标或触摸）
     function handleRelease() {
         clearTimeout(pressTimer);
         clearInterval(autoClickInterval);
         autoClickInterval = null;
+        
+        // 清除长按加速更新定时器
+        if (window.longPressUpdateInterval) {
+            clearInterval(window.longPressUpdateInterval);
+            window.longPressUpdateInterval = null;
+        }
+        
         isPressing = false;
+        
+        // 重置长按倍数
+        currentLongPressMultiplier = 1;
         
         // 停止点击或长按后，立即更新剩余的点击次数
         if (clickCount > 0) {
@@ -401,12 +498,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 鼠标事件
-    gbarButton.addEventListener('mousedown', () => {
+    gbarButton.addEventListener('mousedown', function(e) {
+        e.preventDefault();
         isPressing = true;
+        pressStartTime = Date.now();
+        // 移除旧的定时器
+        if (window.rippleTimer) {
+            clearTimeout(window.rippleTimer);
+        }
         sessionClickTotal = 0;
+        
+        // 重置点击间隔和长按倍数
+        currentClickInterval = CONFIG.funFeatures?.longPressAcceleration?.baseInterval || 80;
+        currentLongPressMultiplier = 1;
+        
         // 长按开始自动点击
         pressTimer = setTimeout(() => {
-            autoClickInterval = setInterval(callGeebar, 80); // 每1000ms自动点击一次
+            autoClickInterval = setInterval(() => {
+                if (sessionClickTotal < SESSION_MAX_PER_PRESS) {
+                    callGeebar();
+                    // 每次点击后更新长按加速
+                    updateLongPressAcceleration();
+                } else {
+                    clearInterval(autoClickInterval);
+                    autoClickInterval = null;
+                }
+            }, currentClickInterval);
+            
+            // 额外设置一个加速更新定时器，专门用于处理长按加速
+            if (CONFIG.funFeatures?.longPressAcceleration?.enabled) {
+                window.longPressUpdateInterval = setInterval(updateLongPressAcceleration, 50);
+            }
         }, 500); // 按下500ms后开始自动点击
     });
     
@@ -419,15 +541,38 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.cancelable) {
             e.preventDefault(); // 阻止默认行为，防止触摸时页面滚动和触发点击事件
         }
-        
         isPressing = true;
+        pressStartTime = Date.now();
+        // 移除旧的定时器
+        if (window.rippleTimer) {
+            clearTimeout(window.rippleTimer);
+        }
         sessionClickTotal = 0;
+        
+        // 重置点击间隔和长按倍数
+        currentClickInterval = CONFIG.funFeatures?.longPressAcceleration?.baseInterval || 80;
+        currentLongPressMultiplier = 1;
+        
         // 立即执行一次点击（确保点击有反馈）
         callGeebar();
         
         // 长按开始自动点击
         pressTimer = setTimeout(() => {
-            autoClickInterval = setInterval(callGeebar, 80); // 每80ms自动点击一次（更快的频率增加体验）
+            autoClickInterval = setInterval(() => {
+                if (sessionClickTotal < SESSION_MAX_PER_PRESS) {
+                    callGeebar();
+                    // 每次点击后更新长按加速
+                    updateLongPressAcceleration();
+                } else {
+                    clearInterval(autoClickInterval);
+                    autoClickInterval = null;
+                }
+            }, currentClickInterval);
+            
+            // 额外设置一个加速更新定时器，专门用于处理长按加速
+            if (CONFIG.funFeatures?.longPressAcceleration?.enabled) {
+                window.longPressUpdateInterval = setInterval(updateLongPressAcceleration, 50);
+            }
         }, 300); // 按下300ms后开始自动点击（更快的响应）
     }, { passive: false }); // 明确指定passive为false以允许preventDefault
     
@@ -892,6 +1037,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 初始化可视化元素
     createVisualizationElements();
     
+
+    
     loadCounters();
     
     // 添加复古风格的特效CSS
@@ -953,4 +1100,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         return true;
     };
+    
+
 });
