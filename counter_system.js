@@ -7,9 +7,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // 获取计数器元素
     const gbarCountElement = document.getElementById('global-click-counter');
     const gbarButton = document.getElementById('click-button');
-
-
-    
     
     // 从URL参数获取模式设置（例如：?mode=api 或 ?mode=local）
     const urlParams = new URLSearchParams(window.location.search);
