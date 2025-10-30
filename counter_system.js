@@ -406,7 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionClickTotal = 0;
         // 长按开始自动点击
         pressTimer = setTimeout(() => {
-            autoClickInterval = setInterval(callGeebar, 1000); // 每1000ms自动点击一次
+            autoClickInterval = setInterval(callGeebar, 80); // 每1000ms自动点击一次
         }, 500); // 按下500ms后开始自动点击
     });
     
