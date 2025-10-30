@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     // 显示当前模式信息
-    console.log(`当前运行模式: ${CONFIG.mode.toUpperCase()} 模式`);
+    // console.log(`当前运行模式: ${CONFIG.mode.toUpperCase()} 模式`);
     
     // 点击计数器，控制数据更新频率
     let clickCount = 0;
@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 更新可视化效果（按主/次计数组件）
         updateVisualizationFromComponents(primaryCount, secondaryCount);
 
-        console.log(`[本地模式] 主计数器(显示并入总能量): ${primaryCount}, 第二计数器: ${secondaryCount}, 总能量: ${totalEnergy}`);
+        // console.log(`[本地模式] 主计数器(显示并入总能量): ${primaryCount}, 第二计数器: ${secondaryCount}, 总能量: ${totalEnergy}`);
     }
     
     // 加载API模式的计数器数据
@@ -209,7 +209,43 @@ document.addEventListener('DOMContentLoaded', function() {
         // 立即更新本地显示，提供即时反馈
         const currentCount = parseInt(gbarCountElement.textContent.replace(/,/g, '')) || 0;
         const newValue = currentCount + energy;
+        
+        // 更新真实数值（用于动画结束后恢复）
+        realHundredsValue = Math.floor(newValue / 100); // 百位及以上
+        realTenDigit = Math.floor((newValue % 100) / 10); // 十位数
+        realUnitDigit = newValue % 10; // 个位数
+        
         gbarCountElement.textContent = newValue.toLocaleString();
+        
+        // 优化动画触发逻辑：只有当动画未运行且满足条件时才启动动画
+        // 这样可以避免在callGeebar频繁调用时反复创建/清除定时器
+        // console.log(`[动画调试] 长按倍数: ${currentLongPressMultiplier}, 按压状态: ${isPressing}, 动画状态: ${digitAnimationInterval ? '运行中' : '已停止'}`);
+        
+        // 根据倍数决定是否需要动画
+        const shouldAnimateUnits = isPressing && currentLongPressMultiplier >= 10; // 10倍以上动画个位数
+        const shouldAnimateTens = isPressing && currentLongPressMultiplier >= 20;  // 20倍以上动画十位数
+        // console.log(`[动画调试] 动画启动条件: 按压=${isPressing}, 倍数=${currentLongPressMultiplier}`);
+        // console.log(`[动画调试] 个位数动画: ${shouldAnimateUnits}, 十位数动画: ${shouldAnimateTens}`);
+        
+        // 是否需要启动动画（至少需要动画个位数）
+        const shouldAnimate = shouldAnimateUnits || shouldAnimateTens;
+        
+        if (shouldAnimate && !digitAnimationInterval) {
+            // 仅当需要动画且动画未运行时，才启动动画
+            console.log(`[动画调试] 启动数字动画，真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
+            animateDigits(shouldAnimateTens); // 传递是否需要动画十位数
+        } else if (!shouldAnimate && digitAnimationInterval) {
+            // 当不需要动画但动画正在运行时，清除动画
+            console.log(`[动画调试] 清除动画，条件不满足`);
+            clearInterval(digitAnimationInterval);
+            digitAnimationInterval = null;
+            // 恢复真实数值显示
+            const realValue = realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit;
+            gbarCountElement.textContent = realValue.toLocaleString();
+        } else if (shouldAnimate && digitAnimationInterval) {
+            // 动画已经在运行，只更新真实值，不重新创建定时器
+            console.log(`[动画调试] 动画已在运行，更新真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
+        }
         
         // 更新本地存储的点击计数
         localClickCount += energy;
@@ -519,6 +555,66 @@ document.addEventListener('DOMContentLoaded', function() {
     let lastUpdateTime = 0; // 上次更新时间
     const UPDATE_THROTTLE_INTERVAL = 50; // 更新节流间隔（毫秒）
     const MIN_CLICK_INTERVAL = 20; // 最小点击间隔（提高性能）
+    // 数字动画相关变量
+    let digitAnimationInterval = null;
+    let realHundredsValue = 0; // 保存百位及以上的真实数值
+    let realTenDigit = 0; // 保存真实的十位数
+    let realUnitDigit = 0; // 保存真实的个位数
+    
+    // 数字动画函数 - 根据倍数为不同位数添加随机变化动画
+    function animateDigits(animateTens) {
+        // 停止之前可能存在的动画
+        if (digitAnimationInterval) {
+            // console.log(`[动画调试] 清除已存在的动画定时器`);
+            clearInterval(digitAnimationInterval);
+            digitAnimationInterval = null;
+        }
+        
+        // 创建固定间隔的动画，确保动画稳定
+        const intervalTime = 10; // 使用较快的固定间隔，动画效果更明显
+        // console.log(`[动画调试] 创建动画定时器，间隔: ${intervalTime}ms, 动画位数: ${animateTens ? '十位+个位' : '个位'}`);
+        
+        digitAnimationInterval = setInterval(() => {
+            // 双重检查按压状态和动画状态
+            if (!isPressing || !digitAnimationInterval) {
+                if (digitAnimationInterval) {
+                    // console.log(`[动画调试] 按压状态结束，停止动画，恢复真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
+                    clearInterval(digitAnimationInterval);
+                    digitAnimationInterval = null;
+                    // 恢复真实数值显示
+                    const realValue = realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit;
+                    gbarCountElement.textContent = realValue.toLocaleString();
+                }
+                return;
+            }
+            
+            // 获取当前显示值
+            const currentDisplayed = parseInt(gbarCountElement.textContent.replace(/,/g, '')) || 0;
+            
+            // 生成随机个位数
+            const currentDisplayedUnit = currentDisplayed % 10;
+            let randomUnit;
+            do {
+                randomUnit = Math.floor(Math.random() * 10);
+            } while (randomUnit === currentDisplayedUnit);
+            
+            // 根据是否需要动画十位数生成随机十位数
+            let randomTen = realTenDigit;
+            if (animateTens) {
+                const currentDisplayedTen = Math.floor((currentDisplayed % 100) / 10);
+                do {
+                    randomTen = Math.floor(Math.random() * 10);
+                } while (randomTen === currentDisplayedTen);
+            }
+            
+            // 计算带随机数的显示值
+            const animatedValue = realHundredsValue * 100 + randomTen * 10 + randomUnit;
+            // console.log(`[动画调试] 动画更新，显示值: ${animatedValue}, 十位数: ${randomTen}, 个位数: ${randomUnit}`);
+            
+            // 更新显示
+            gbarCountElement.textContent = animatedValue.toLocaleString();
+        }, intervalTime);
+    }
     
     // 处理释放事件（鼠标或触摸）
     function handleRelease() {
@@ -530,6 +626,16 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.longPressUpdateInterval) {
             clearInterval(window.longPressUpdateInterval);
             window.longPressUpdateInterval = null;
+        }
+        
+        // 清除数字动画定时器并恢复真实数值
+        if (digitAnimationInterval) {
+            // console.log(`[动画调试] handleRelease中清除动画，恢复真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
+            clearInterval(digitAnimationInterval);
+            digitAnimationInterval = null;
+            // 恢复真实数值显示
+            const realValue = realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit;
+            gbarCountElement.textContent = realValue.toLocaleString();
         }
         
         isPressing = false;

@@ -8,7 +8,7 @@ const COUNTER_CONFIG = {
     autoUpdateInterval: 15000,
 
     // 本地批量发送阈值（点击累积到该值时触发一次更新逻辑）
-    clickThreshold: 9110,  //g11 QAQ
+    clickThreshold: 9113,  //g11 QAQ
 
     // API 配置
     api: {
@@ -40,7 +40,7 @@ const COUNTER_CONFIG = {
         randomVariation: 0
     },
 
-    // 娱乐性功能配置
+   
     funFeatures: {
         // 连击系统配置
         comboSystem: {
@@ -57,7 +57,7 @@ const COUNTER_CONFIG = {
             baseInterval: 100,      // 基础点击间隔（毫秒）
             minInterval: 5,         // 最小点击间隔（毫秒）
             accelerationRate: 0.05, // 加速率（每次减少5%的间隔时间）
-            maxMultiplier: 30,      // 最大长按倍数
+            maxMultiplier: 50,      // 最大长按倍数
             // 长按时间对应的奖励倍数
             timeMultipliers: [
                 { time: 1000, multiplier: 2 },  // 长按1秒，2倍能量
@@ -65,7 +65,8 @@ const COUNTER_CONFIG = {
                 { time: 5000, multiplier: 5 },  // 长按5秒，5倍能量
                 { time: 10000, multiplier: 10 },  // 长按10秒，10倍能量
                 { time: 20000, multiplier: 20 }, // 长按20秒，20倍能量
-                { time: 30000, multiplier: 30 } // 长按30秒，30倍能量
+                { time: 30000, multiplier: 50 } // 长按50秒，50倍能量
+
             ]
         },
         

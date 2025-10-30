@@ -181,9 +181,9 @@ window.addEventListener('DOMContentLoaded', function() {
             endLongPress();
         }, { passive: true });
         
-        console.log('基于按钮位置的表情包效果已初始化');
+        console.log('表情包效果已初始化');
     } else {
-        console.log('未找到目标按钮，表情包效果未初始化');
+        console.log('表情包效果未初始化');
     }
 });
 
