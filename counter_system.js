@@ -349,9 +349,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
+    // 添加变量记录上一次的长按倍数
+    // let lastLongPressMultiplier = 1;
+    
     // 计算长按倍数
     function calculateLongPressMultiplier() {
         if (!CONFIG.funFeatures?.longPressAcceleration?.enabled || !isPressing || pressStartTime === 0) {
+            // 重置记录的倍数
+            if (lastLongPressMultiplier !== 1) {
+                lastLongPressMultiplier = 1;
+            }
             return 1;
         }
         
@@ -369,25 +376,70 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 限制最大倍数
         const maxMultiplier = CONFIG.funFeatures.longPressAcceleration.maxMultiplier;
-        return Math.min(multiplier, maxMultiplier);
+        const finalMultiplier = Math.min(multiplier, maxMultiplier);
+        
+        // 只有当倍数发生变化时才显示提示
+        if (finalMultiplier !== lastLongPressMultiplier) {
+            // 更新记录的倍数
+            lastLongPressMultiplier = finalMultiplier;
+            
+            // 显示倍数变化提示
+            console.log(`[长按加速] 当前长按时间: ${Math.floor(pressDuration/1000)}秒，获得${finalMultiplier}倍加速效果`);
+            
+            // 如果达到最大倍数，额外提示
+            if (finalMultiplier === maxMultiplier && multiplier >= maxMultiplier) {
+                console.log(`[长按加速] 已达到最大${maxMultiplier}倍加速！`);
+            }
+        }
+        
+        return finalMultiplier;
     }
     
-    // 更新长按加速
+    // 更新长按加速（优化版）
     function updateLongPressAcceleration() {
         if (!CONFIG.funFeatures?.longPressAcceleration?.enabled || !isPressing) return;
         
-        const pressDuration = Date.now() - pressStartTime;
+        const now = Date.now();
+        // 节流控制：限制更新频率
+        if (now - lastUpdateTime < UPDATE_THROTTLE_INTERVAL) return;
+        lastUpdateTime = now;
+        
+        const pressDuration = now - pressStartTime;
         const config = CONFIG.funFeatures.longPressAcceleration;
         
-        // 计算新的点击间隔 (随时间减少，但不低于最小值)
-        const newInterval = Math.max(
-            config.minInterval,
-            config.baseInterval * Math.pow(1 - config.accelerationRate, pressDuration / 100)
-        );
+        // 缓存配置值，避免重复访问对象属性
+        const accelerationRate = config.accelerationRate;
+        const baseInterval = config.baseInterval;
+        const minInterval = Math.max(MIN_CLICK_INTERVAL, config.minInterval || 5); // 确保最小间隔不太小
         
-        // 如果间隔时间有显著变化，更新定时器
-        if (Math.abs(newInterval - currentClickInterval) > 1 && autoClickInterval) {
+        // 优化的间隔计算 - 使用查表法代替重复的指数运算
+        // 预计算常用的时间点对应的间隔值
+        let newInterval = baseInterval;
+        if (pressDuration >= 2000) {
+            // 只在长按时间较长时才计算指数，避免频繁的昂贵运算
+            newInterval = Math.max(
+                minInterval,
+                baseInterval * Math.pow(1 - accelerationRate, pressDuration / 100)
+            );
+        } else if (pressDuration >= 1000) {
+            // 中等长按时间使用简化计算
+            newInterval = baseInterval * (1 - accelerationRate * 0.5);
+        } else if (pressDuration >= 500) {
+            // 短按使用更小的加速率
+            newInterval = baseInterval * (1 - accelerationRate * 0.2);
+        }
+        
+        // 计算新的长按倍数（只计算一次）
+        const newMultiplier = calculateLongPressMultiplier();
+        currentLongPressMultiplier = newMultiplier;
+        
+        // 只在间隔有显著变化时才重新创建定时器
+        // 并且只有在定时器存在时才更新
+        if (Math.abs(newInterval - currentClickInterval) > 5 && autoClickInterval) {
+            // 先清除旧定时器
             clearInterval(autoClickInterval);
+            
+            // 更新间隔并创建新定时器
             currentClickInterval = newInterval;
             autoClickInterval = setInterval(() => {
                 if (sessionClickTotal < SESSION_MAX_PER_PRESS) {
@@ -398,20 +450,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }, currentClickInterval);
         }
-        
-        // 更新长按倍数
-        currentLongPressMultiplier = calculateLongPressMultiplier();
     }
     
-    // 计算点击能量
+    // 计算点击能量（优化版）
     function calculateClickEnergy() {
         // 基础能量为1
         let energy = 1;
         
         // 如果启用了长按加速功能且正在按压，应用长按倍数
+        // 直接使用缓存的currentLongPressMultiplier，避免重复计算
         if (CONFIG.funFeatures?.longPressAcceleration?.enabled && isPressing && pressStartTime > 0) {
-            const multiplier = calculateLongPressMultiplier();
-            energy = Math.floor(energy * multiplier);
+            energy = Math.floor(energy * currentLongPressMultiplier);
         }
         
         return Math.max(1, energy); // 确保最小能量为1
@@ -466,6 +515,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let pressStartTime = 0; // 按压开始时间
     let currentClickInterval = CONFIG.funFeatures?.longPressAcceleration?.baseInterval || 100; // 当前点击间隔
     let currentLongPressMultiplier = 1; // 当前长按倍数
+    let lastLongPressMultiplier = 1; // 记录上一次的长按倍数
+    let lastUpdateTime = 0; // 上次更新时间
+    const UPDATE_THROTTLE_INTERVAL = 50; // 更新节流间隔（毫秒）
+    const MIN_CLICK_INTERVAL = 20; // 最小点击间隔（提高性能）
     
     // 处理释放事件（鼠标或触摸）
     function handleRelease() {
@@ -481,8 +534,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         isPressing = false;
         
-        // 重置长按倍数
+        // 重置长按相关变量
         currentLongPressMultiplier = 1;
+        lastLongPressMultiplier = 1;
+        lastUpdateTime = 0;
         
         // 停止点击或长按后，立即更新剩余的点击次数
         if (clickCount > 0) {
@@ -502,6 +557,8 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         isPressing = true;
         pressStartTime = Date.now();
+        lastUpdateTime = Date.now(); // 初始化更新时间
+        
         // 移除旧的定时器
         if (window.rippleTimer) {
             clearTimeout(window.rippleTimer);
@@ -511,19 +568,25 @@ document.addEventListener('DOMContentLoaded', function() {
         // 重置点击间隔和长按倍数
         currentClickInterval = CONFIG.funFeatures?.longPressAcceleration?.baseInterval || 80;
         currentLongPressMultiplier = 1;
+        lastLongPressMultiplier = 1;
         
         // 长按开始自动点击
         pressTimer = setTimeout(() => {
+            // 使用更合理的初始间隔
+            currentClickInterval = Math.max(MIN_CLICK_INTERVAL, CONFIG.funFeatures?.longPressAcceleration?.baseInterval || 80);
+            
             autoClickInterval = setInterval(() => {
                 if (sessionClickTotal < SESSION_MAX_PER_PRESS) {
                     callGeebar();
-                    // 每次点击后更新长按加速
-                    updateLongPressAcceleration();
                 } else {
                     clearInterval(autoClickInterval);
                     autoClickInterval = null;
                 }
             }, currentClickInterval);
+            
+            // 使用单独的定时器更新长按加速，而不是每次点击都更新
+            // 这样可以控制更新频率，提高性能
+            window.longPressUpdateInterval = setInterval(updateLongPressAcceleration, UPDATE_THROTTLE_INTERVAL);
             
             // 额外设置一个加速更新定时器，专门用于处理长按加速
             if (CONFIG.funFeatures?.longPressAcceleration?.enabled) {
