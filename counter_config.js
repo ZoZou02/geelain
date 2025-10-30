@@ -65,7 +65,7 @@ const COUNTER_CONFIG = {
                 { time: 5000, multiplier: 5 },  // 长按5秒，5倍能量
                 { time: 10000, multiplier: 10 },  // 长按10秒，10倍能量
                 { time: 20000, multiplier: 20 }, // 长按20秒，20倍能量
-                { time: 30000, multiplier: 50 } // 长按50秒，50倍能量
+                { time: 30000, multiplier: 40 } // 长按30秒，40倍能量
 
             ]
         },

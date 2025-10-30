@@ -229,11 +229,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (shouldAnimate && !digitAnimationInterval) {
             // 仅当需要动画且动画未运行时，才启动动画
-            console.log(`[动画调试] 启动数字动画，真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
+            // console.log(`[动画调试] 启动数字动画，真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
             animateDigits(shouldAnimateTens); // 传递是否需要动画十位数
         } else if (!shouldAnimate && digitAnimationInterval) {
             // 当不需要动画但动画正在运行时，清除动画
-            console.log(`[动画调试] 清除动画，条件不满足`);
+            // console.log(`[动画调试] 清除动画，条件不满足`);
             clearInterval(digitAnimationInterval);
             digitAnimationInterval = null;
             // 恢复真实数值显示
@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
             gbarCountElement.textContent = realValue.toLocaleString();
         } else if (shouldAnimate && digitAnimationInterval) {
             // 动画已经在运行，只更新真实值，不重新创建定时器
-            console.log(`[动画调试] 动画已在运行，更新真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
+            // console.log(`[动画调试] 动画已在运行，更新真实值: ${realHundredsValue * 100 + realTenDigit * 10 + realUnitDigit}`);
         }
         
         // 更新本地存储的点击计数
