@@ -1,60 +1,69 @@
-# Node.js dependencies
-node_modules/
-package-lock.json
-
-# 本地数据文件
-counter_data.json
-
-# 日志文件
+# Logs
+logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
-# 编辑器相关文件
-.vscode/
-*.swp
-*.swo
-*~
+# Dependencies
+node_modules
+.pnp
+.pnp.js
 
-# 操作系统文件
+# Testing
+coverage
+
+# Production build
+dist
+dist-ssr
+build
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-Thumbs.db
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# 临时文件
-*.tmp
-*.temp
-
-# 环境变量文件
+# Environment variables
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# 构建输出
-dist/
-build/
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# OS generated files
+Thumbs.db
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # 本地API服务器数据和配置
 package.json
 local_api_server.js
 test_api.js
 README_LOCAL_API.md
-
-# 本地开发环境配置
+counter_data.json
+counter_visualizer.html
 *.local.js
 *.dev.js
-
-# 测试覆盖率报告
-coverage/
-.nyc_output/
-
-# IDE配置
-.idea/
-*.sublime-project
-*.sublime-workspace
-
-# 其他
-.eslintcache
-.stylelintcache
