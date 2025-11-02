@@ -20,16 +20,16 @@ const COUNTER_CONFIG = {
 
     // 主计数器配置 geebar/geebar03
     primaryCounter: {
-        id: '46233b115d0b88d8b4ffa6e7e77ca0ae',
-        apiKey: '1fb7157db27dd7703fd805f636c58ffc',
+        id: '52fc88631b4d439c28796dfb288cc707',
+        apiKey: '8100e6e798e1423f1e4952564c034315',
         // 当主计数到达该阈值时：重置主计数并让第二计数 +1
         resetThreshold: 1000000000
     },
 
     // 第二计数器配置 geebar02/测试04
     secondaryCounter: {
-        id: '05927f2b63290ac9d5f65b3aaaedc919',
-        apiKey: '1fb7157db27dd7703fd805f636c58ffc'
+        id: 'aa26cb1069bd10e685306fe9662556ae',
+        apiKey: '8100e6e798e1423f1e4952564c034315'
     },
 
     // 本地模式模拟参数
