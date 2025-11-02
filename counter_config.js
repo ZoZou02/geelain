@@ -5,7 +5,7 @@ const COUNTER_CONFIG = {
     mode: 'api',
 
     // 本地定时刷新间隔（毫秒）
-    autoUpdateInterval: 15000,
+    autoUpdateInterval: 30000,
 
     // 本地批量发送阈值（点击累积到该值时触发一次更新逻辑）
     clickThreshold: 9113,  //g11 QAQ
@@ -15,7 +15,6 @@ const COUNTER_CONFIG = {
         baseUrl: 'https://js.ruseo.cn/api/counter.php',
         getAction: 'get',
         incrementAction: 'increment',
-        // 明确使用 reset 动作名
         resetAction: 'reset'
     },
 
