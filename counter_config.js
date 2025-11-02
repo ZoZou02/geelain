@@ -21,7 +21,7 @@ const COUNTER_CONFIG = {
     // 主计数器配置 geebar/geebar03
     primaryCounter: {
         id: '46233b115d0b88d8b4ffa6e7e77ca0ae',
-        apiKey: '1fb7157db27dd7703fd805f636c59ffc',
+        apiKey: '1fb7157db27dd7703fd805f636c58ffc',
         // 当主计数到达该阈值时：重置主计数并让第二计数 +1
         resetThreshold: 1000000000
     },
@@ -29,7 +29,7 @@ const COUNTER_CONFIG = {
     // 第二计数器配置 geebar02/测试04
     secondaryCounter: {
         id: '05927f2b63290ac9d5f65b3aaaedc919',
-        apiKey: '1fb7157db27dd7703fd805f636c59ffc'
+        apiKey: '1fb7157db27dd7703fd805f636c58ffc'
     },
 
     // 本地模式模拟参数
