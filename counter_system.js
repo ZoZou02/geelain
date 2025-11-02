@@ -45,6 +45,13 @@ document.addEventListener('DOMContentLoaded', function() {
         return fetch(url)
             .then(r => r.json())
             .then(data => {
+                // 检查是否为API key错误
+                if (data && data.error === 'Invalid API key') {
+                    console.error('[API模式] 第二计数器增加请求中检测到Invalid API key错误');
+                    window.location.href = '/503.html';
+                    return;
+                }
+                
                 if (!(data && data.success)) {
                     if (retries > 0) {
                         console.warn(`[API模式] 第二计数器增加失败，重试剩余 ${retries} 次`);
@@ -61,6 +68,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     return incrementSecondaryWithRetry(retries - 1);
                 }
                 console.error(`[API模式] 第二计数器增加最终失败: ${err.message}`);
+                console.error('[API模式] 重试失败，跳转到503页面');
+                window.location.href = '/503.html';
             });
     }
 
@@ -106,6 +115,13 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(secondaryUrl).then(r => r.json()).catch(err => ({ error: err }))
         ])
         .then(([pRes, sRes]) => {
+            // 检查是否存在API key错误
+            if (pRes && pRes.error === 'Invalid API key' || sRes && sRes.error === 'Invalid API key') {
+                console.error('[API模式] API响应中检测到Invalid API key错误');
+                window.location.href = '/503.html';
+                return;
+            }
+            
             const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000;
 
             const validPrimary = pRes && pRes.success && pRes.counter && pRes.counter.current_count;
@@ -132,7 +148,9 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`[API模式] 主: ${primaryCount}, 次: ${secondaryCount}, 总能量: ${totalEnergy}`);
         })
         .catch((error) => {
-            handleApiError(`计数器API并行请求失败: ${error.message}`);
+            console.error(`[API模式] 计数器API并行请求失败: ${error.message}`);
+            console.error('[API模式] API请求失败，跳转到503页面');
+            window.location.href = '/503.html';
         });
     }
     
@@ -178,18 +196,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return Math.max(pointsPerCell, adjusted);
     }
 
-    // 处理API错误，回退到本地模式临时显示
+    // 处理API错误，直接跳转到503页面
     function handleApiError(errorMsg) {
         console.error(`[API模式] ${errorMsg}`);
-        
-        // 临时使用本地数据作为显示（总能量）
-        const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000;
-        const fallbackPrimary = CONFIG.local.primaryBaseCount + localClickCount;
-        const totalEnergy = fallbackPrimary + (localSecondaryCount * thresholdUnit);
-        gbarCountElement.textContent = totalEnergy.toLocaleString();
-        updateVisualizationFromComponents(fallbackPrimary, localSecondaryCount);
-        
-        console.log(`[API模式] 临时使用本地数据显示: 主计数器 ${fallbackPrimary}, 第二计数器 ${localSecondaryCount}, 总能量 ${totalEnergy}`);
+        console.error('[API模式] API不可用，跳转到503页面');
+        window.location.href = '/503.html';
     }
     
     // 优化版本，支持快速连续点击和阈值重置逻辑
@@ -277,6 +288,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetch(url)
                     .then(response => response.json())
                     .then(data => {
+                        // 检查是否为API key错误
+                        if (data && data.error === 'Invalid API key') {
+                            console.error('[API模式] API响应中检测到Invalid API key错误');
+                            window.location.href = '/503.html';
+                            return;
+                        }
+                        
                         if (data && data.success) {
                             console.log('[API模式] 主计数增加成功');
                             // 成功后主动拉取最新主/次计数再判断阈值
@@ -288,6 +306,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                     return fetch(resetUrl)
                                         .then(r => r.json())
                                         .then(resetData => {
+                                            // 检查重置请求是否有API key错误
+                                            if (resetData && resetData.error === 'Invalid API key') {
+                                                console.error('[API模式] 重置请求中检测到Invalid API key错误');
+                                                window.location.href = '/503.html';
+                                                return;
+                                            }
+                                            
                                             if (resetData && resetData.success) {
                                                 console.log('[API模式] 主计数器重置成功');
                                                 return incrementSecondaryWithRetry().finally(() => loadApiCounters());
@@ -298,7 +323,8 @@ document.addEventListener('DOMContentLoaded', function() {
                                         })
                                         .catch(err => {
                                             console.error(`[API模式] 主计数器重置请求失败: ${err.message}`);
-                                            loadApiCounters();
+                                            console.error('[API模式] API请求失败，跳转到503页面');
+                                            window.location.href = '/503.html';
                                         });
                                 } else {
                                     // 未达到阈值，直接刷新
@@ -310,9 +336,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(error => {
-                        console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
-                        // 保持现状，等待下次自动刷新
-                    });
+                    console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
+                    console.error('[API模式] API请求失败，跳转到503页面');
+                    window.location.href = '/503.html';
+                });
             }
             clickCount = 0;
         }
@@ -344,6 +371,13 @@ document.addEventListener('DOMContentLoaded', function() {
         fetch(url)
             .then(response => response.json())
             .then(data => {
+                // 检查是否为API key错误
+                if (data && data.error === 'Invalid API key') {
+                    console.error('[API模式] API响应中检测到Invalid API key错误');
+                    window.location.href = '/503.html';
+                    return;
+                }
+                
                 if (data && data.success) {
                     console.log('[API模式] 主计数增加成功');
                     // 成功后主动拉取最新主/次计数再判断阈值
@@ -355,6 +389,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             return fetch(resetUrl)
                                 .then(r => r.json())
                                 .then(resetData => {
+                                    // 检查重置请求是否有API key错误
+                                    if (resetData && resetData.error === 'Invalid API key') {
+                                        console.error('[API模式] 重置请求中检测到Invalid API key错误');
+                                        window.location.href = '/503.html';
+                                        return;
+                                    }
+                                    
                                     if (resetData && resetData.success) {
                                         console.log('[API模式] 主计数器重置成功');
                                         return incrementSecondaryWithRetry().finally(() => loadApiCounters());
@@ -378,7 +419,8 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
-                // 保持现状，等待下次自动刷新
+                console.error('[API模式] API请求失败，跳转到503页面');
+                window.location.href = '/503.html';
             });
     }
     

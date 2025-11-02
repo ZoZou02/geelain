@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>503 - GeeLain</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/favicon/favicon-96x96.png">
+    <link rel="icon" type="image/x-icon" href="assets/favicon/favicon.ico">
+    <link rel="manifest" href="assets/favicon/site.webmanifest">
+    <meta name="theme-color" content="#fd2d5c">
+    <link rel="stylesheet" href="style.css?v=1.7.4">
+    <style>
+        .error-code {
+            font-size: 6rem;
+            color: #fd2d5c;
+            letter-spacing: 2px;
+            transform: skew(-5deg);
+            margin: 20px 0;
+            font-weight: bold;
+            text-shadow: 
+                0 0 8px #fd2d5c,
+                0 0 15px #fd2d5c,
+                2px 0 0 rgba(255, 0, 0, 0.9),
+                -2px 0 0 rgba(0, 255, 255, 0.9),
+                0 2px 0 rgba(255, 0, 0, 0.7),
+                0 -2px 0 rgba(0, 255, 255, 0.7);
+            animation: intermittentShake 3s infinite ease-in-out;
+        }
+        
+        .error-message {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            color: #ffffff;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+        }
+        
+        .error-description {
+            font-size: 1rem;
+            margin: 20px 0 30px;
+            color: #ffffff;
+            opacity: 0.8;
+            max-width: 80%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .error-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .error-image {
+            max-width: 300px;
+            width: 100%;
+            margin: 30px 0;
+            image-rendering: pixelated;
+            animation: glitchImage 2s infinite alternate-reverse;
+        }
+        
+        @media (max-width: 768px) {
+            .error-code {
+                font-size: 4rem;
+            }
+            
+            .error-message {
+                font-size: 1.2rem;
+            }
+            
+            .error-image {
+                max-width: 200px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .error-code {
+                font-size: 3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="interference"></div>
+    
+    <div class="container">
+        <div class="error-container">
+            <div class="error-code">503</div>
+            <p class="timer-text">服务暂时不可用</p>
+            <img src="assets/img/503.png" alt="503 Error" class="error-image">
+            <p class="error-description">GeeLain暂时关闭维护中，请稍后再试。</p>
+            <button id="back-home" class="click-button" style="margin-top: 20px;">返回首页</button>
+        </div>
+    </div>
+    
+    <!-- 页脚部分 -->
+    <footer class="site-footer">
+        <p>geelain</p>
+        <div class="footer-info">
+            <div class="footer-section">
+                <p class="footer-section-title">作者信息 | Author</p>
+                <p class="footer-section-content"><a href="https://github.com/ZoZou02" target="_blank">zozou</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <p class="footer-section-title">灵感来源 | Inspired by</p>
+                <p class="footer-section-content"> <a href="https://fauux.neocities.org" target="_blank">fauux.neocities.org</a></p>
+            </div>
+            <div class="footer-section">
+                <p class="footer-section-title">内容声明 | Disclaimer</p>
+                <p class="footer-section-content">本网站仅供娱乐使用，非任何官方渠道或立场。页面素材可能包含二创或来源于公开网络，其版权归原作者所有。若有侵权或不当内容，请邮件联系：zozou0610@163.com。<br>
+                This site is for entertainment and non‑commercial community use only and is not an official channel. Materials may include fan-made or publicly sourced works; copyrights belong to their respective owners. Do not use the content for investment, commercial, or other serious purposes. For takedown or rights issues, contact: zozou0610@163.com.</p>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        document.getElementById('back-home').addEventListener('click', function() {
+            window.location.href = '/';
+        });
+        
+        // 返回首页按钮点击事件
+        // 添加一些故障效果
+        setInterval(function() {
+            const errorCode = document.querySelector('.error-code');
+            errorCode.classList.add('counter-flash');
+            setTimeout(function() {
+                errorCode.classList.remove('counter-flash');
+            }, 300);
+        }, 5000);
+        
+        // 移除了自动跳转功能
+    </script>
+</body>
+</html>
