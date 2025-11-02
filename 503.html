@@ -115,11 +115,10 @@
     
     <script>
         document.getElementById('back-home').addEventListener('click', function() {
-            window.location.href = '/';
+            window.location.href = '/geelain';
         });
         
         // 返回首页按钮点击事件
-        // 添加一些故障效果
         setInterval(function() {
             const errorCode = document.querySelector('.error-code');
             errorCode.classList.add('counter-flash');
@@ -128,7 +127,6 @@
             }, 300);
         }, 5000);
         
-        // 移除了自动跳转功能
     </script>
 </body>
 </html>
