@@ -661,6 +661,12 @@ document.addEventListener('DOMContentLoaded', function() {
         clearInterval(autoClickInterval);
         autoClickInterval = null;
         
+        // 长按结束后，重新启动自动更新定时器
+        if (autoUpdateInterval) {
+            clearInterval(autoUpdateInterval);
+        }
+        autoUpdateInterval = setInterval(loadCounters, CONFIG.autoUpdateInterval);
+        
         // 清除长按加速更新定时器
         if (window.longPressUpdateInterval) {
             clearInterval(window.longPressUpdateInterval);
@@ -708,6 +714,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (window.rippleTimer) {
             clearTimeout(window.rippleTimer);
         }
+        
+        // 长按开始时，暂停自动更新定时器
+        if (autoUpdateInterval) {
+            clearInterval(autoUpdateInterval);
+        }
         sessionClickTotal = 0;
         
         // 重置点击间隔和长按倍数
@@ -754,6 +765,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // 移除旧的定时器
         if (window.rippleTimer) {
             clearTimeout(window.rippleTimer);
+        }
+        
+        // 长按开始时，暂停自动更新定时器
+        if (autoUpdateInterval) {
+            clearInterval(autoUpdateInterval);
         }
         sessionClickTotal = 0;
         
@@ -1272,8 +1288,8 @@ document.addEventListener('DOMContentLoaded', function() {
     `;
     document.head.appendChild(style);
     
-    // 添加定期自动更新功能
-    setInterval(loadCounters, CONFIG.autoUpdateInterval);
+    // 添加定期自动更新功能，保存定时器引用以便在长按期间控制
+    let autoUpdateInterval = setInterval(loadCounters, CONFIG.autoUpdateInterval);
     
     // 添加模式切换UI（可选功能，可以在控制台手动调用）
     window.switchCounterMode = function(mode) {
