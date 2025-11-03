@@ -12,8 +12,7 @@ const COUNTER_CONFIG = {
 
     // API 配置
     api: {
-        // baseUrl: 'https://53b2a406.r37.cpolar.top/api/counter',
-        baseUrl: 'http://8.148.253.91:3000/api/counter',
+        baseUrl: 'https://53b2a406.r37.cpolar.top/api/counter',
         getAction: 'get',
         incrementAction: 'increment',
         resetAction: 'reset'
