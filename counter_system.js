@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 检查是否为API key错误
                 if (data && data.error === 'Invalid API key') {
                     console.error('[API模式] 第二计数器增加请求中检测到Invalid API key错误');
-                    window.location.href = '/geelain/503.html';
+                    window.location.href = '/geelain/g503.html';
                     return;
                 }
                 
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 console.error(`[API模式] 第二计数器增加最终失败: ${err.message}`);
                 console.error('[API模式] 重试失败，跳转到503页面');
-                window.location.href = '/geelain/503.html';
+                window.location.href = '/geelain/g503.html';
             });
     }
 
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // 检查是否存在API key错误
             if (pRes && pRes.error === 'Invalid API key' || sRes && sRes.error === 'Invalid API key') {
                 console.error('[API模式] API响应中检测到Invalid API key错误');
-                window.location.href = '/geelain/503.html';
+                window.location.href = '/geelain/g503.html';
                 return;
             }
             
@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch((error) => {
             console.error(`[API模式] 计数器API并行请求失败: ${error.message}`);
             console.error('[API模式] API请求失败，跳转到503页面');
-            window.location.href = '/geelain/503.html';
+            window.location.href = '/geelain/g503.html';
         });
     }
     
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleApiError(errorMsg) {
         console.error(`[API模式] ${errorMsg}`);
         console.error('[API模式] API不可用，跳转到503页面');
-        window.location.href = '/geelain/503.html';
+        window.location.href = '/geelain/g503.html';
     }
     
     // 优化版本，支持快速连续点击和阈值重置逻辑
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         // 检查是否为API key错误
                         if (data && data.error === 'Invalid API key') {
                             console.error('[API模式] API响应中检测到Invalid API key错误');
-                            window.location.href = '/geelain/503.html';
+                            window.location.href = '/geelain/g503.html';
                             return;
                         }
                         
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                             // 检查重置请求是否有API key错误
                                             if (resetData && resetData.error === 'Invalid API key') {
                                                 console.error('[API模式] 重置请求中检测到Invalid API key错误');
-                                                window.location.href = '/geelain/503.html';
+                                                window.location.href = '/geelain/g503.html';
                                                 return;
                                             }
                                             
@@ -324,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         .catch(err => {
                                             console.error(`[API模式] 主计数器重置请求失败: ${err.message}`);
                                             console.error('[API模式] API请求失败，跳转到503页面');
-                                            window.location.href = '/geelain/503.html';
+                                            window.location.href = '/geelain/g503.html';
                                         });
                                 } else {
                                     // 未达到阈值，直接刷新
@@ -338,7 +338,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .catch(error => {
                     console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
                     console.error('[API模式] API请求失败，跳转到503页面');
-                    window.location.href = '/geelain/503.html';
+                    window.location.href = '/geelain/g503.html';
                 });
             }
             clickCount = 0;
@@ -374,7 +374,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 检查是否为API key错误
                 if (data && data.error === 'Invalid API key') {
                     console.error('[API模式] API响应中检测到Invalid API key错误');
-                    window.location.href = '/geelain/503.html';
+                    window.location.href = '/geelain/g503.html';
                     return;
                 }
                 
@@ -392,7 +392,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                     // 检查重置请求是否有API key错误
                                     if (resetData && resetData.error === 'Invalid API key') {
                                         console.error('[API模式] 重置请求中检测到Invalid API key错误');
-                                        window.location.href = '/geelain/503.html';
+                                        window.location.href = '/geelain/g503.html';
                                         return;
                                     }
                                     
@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
                 console.error('[API模式] API请求失败，跳转到503页面');
-                window.location.href = '/geelain/503.html';
+                window.location.href = '/geelain/g503.html';
             });
     }
     
