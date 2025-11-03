@@ -12,7 +12,8 @@ const COUNTER_CONFIG = {
 
     // API 配置
     api: {
-        baseUrl: 'https://js.ruseo.cn/api/counter.php',
+        // baseUrl: 'https://js.ruseo.cn/api/counter.php',
+        baseUrl: 'https://53b2a406.r37.cpolar.top/api/counter',
         getAction: 'get',
         incrementAction: 'increment',
         resetAction: 'reset'
@@ -20,16 +21,20 @@ const COUNTER_CONFIG = {
 
     // 主计数器配置 geebar/geebar03
     primaryCounter: {
-        id: '52fc88631b4d439c28796dfb288cc707',
-        apiKey: '8100e6e798e1423f1e4952564c034315',
+        // id: '52fc88631b4d439c28796dfb288cc707',
+        // apiKey: '8100e6e798e1423f1e4952564c034315',
+        id: '1001',
+        apiKey: '911612',
         // 当主计数到达该阈值时：重置主计数并让第二计数 +1
         resetThreshold: 1000000000
     },
 
     // 第二计数器配置 geebar02/测试04
     secondaryCounter: {
-        id: 'aa26cb1069bd10e685306fe9662556ae',
-        apiKey: '8100e6e798e1423f1e4952564c034315'
+        // id: 'aa26cb1069bd10e685306fe9662556ae',
+        // apiKey: '8100e6e798e1423f1e4952564c034315'
+        id: '1002',
+        apiKey: '911612',
     },
 
     // 本地模式模拟参数
