@@ -292,8 +292,15 @@ document.addEventListener('DOMContentLoaded', function() {
             const apiUrl = `${baseUrl}/${submitAction}?name=${encodedName}&content=${encodedContent}&timestamp=${timestamp}`;
             console.log('构建的API URL:', apiUrl);
             
-            // 真实API调用 - 改为GET请求
-            return fetch(apiUrl)
+            // 真实API调用 - 改为GET请求，添加缓存控制选项
+            return fetch(apiUrl, {
+                cache: 'no-store', // 禁用缓存
+                headers: {
+                    'Cache-Control': 'no-cache, no-store, must-revalidate',
+                    'Pragma': 'no-cache',
+                    'Expires': '0'
+                }
+            })
                 .then(response => {
                     console.log('API响应状态:', response.status);
                     if (!response.ok) {
@@ -321,9 +328,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function fetchMessagesFromApi() {
         const { api } = COUNTER_CONFIG.messageSystem;
         const { baseUrl, getAction } = api;
-        const apiUrl = `${baseUrl}/${getAction}`;
+        // 添加时间戳参数防止浏览器缓存
+        const timestamp = new Date().getTime();
+        const apiUrl = `${baseUrl}/${getAction}?t=${timestamp}`;
         
-        return fetch(apiUrl)
+        // 添加缓存控制选项，确保每次都获取最新数据
+        return fetch(apiUrl, {
+            cache: 'no-store', // 禁用缓存
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        })
             .then(response => {
                 if (!response.ok) {
                     throw new Error('网络响应错误');
