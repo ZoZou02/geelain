@@ -62,12 +62,12 @@ const COUNTER_CONFIG = {
         warningThreshold: 40,
         
         // 随机显示间隔范围（毫秒）
-        minDisplayInterval: 200,
-        maxDisplayInterval: 600,
+        minDisplayInterval: 1000,
+        maxDisplayInterval: 3500,
         
         // 弹幕动画时长（毫秒）
         baseDuration: 15000,
-        minDuration: 5000,
+        minDuration: 10000,
         maxDuration: 12000
     }
 };

@@ -256,14 +256,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
         
-        // 启动随机留言显示系统
-        console.log('启动随机留言显示系统');
         startRandomMessageDisplay();
     }
     
     // 提交留言到API
     function submitMessage(name, content) {
-        console.log('submitMessage函数被调用，参数:', {name, content});
         
         try {
             const { api } = COUNTER_CONFIG.messageSystem;
@@ -332,8 +329,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const timestamp = new Date().getTime();
         const apiUrl = `${baseUrl}/${getAction}?t=${timestamp}`;
         
+        console.log('正在从API获取最新留言列表:', apiUrl);
+        
         // 添加缓存控制选项，确保每次都获取最新数据
         return fetch(apiUrl, {
+            method: 'GET',
             cache: 'no-store', // 禁用缓存
             headers: {
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -342,33 +342,46 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
             .then(response => {
+                console.log('API响应状态:', response.status);
                 if (!response.ok) {
-                    throw new Error('网络响应错误');
+                    throw new Error(`网络响应错误: ${response.status}`);
                 }
                 // 确保从响应中提取正确的数据结构
                 return response.json().then(data => {
+                    console.log('API返回数据:', data);
+                    
                     // 确认API返回格式为 { success: true, data: [...] }，其中每个item包含id、name、content和timestamp字段
                     if (data && data.success && Array.isArray(data.data)) {
                         // 过滤并确保每个消息对象都包含必要的字段
-                        return data.data.filter(message => 
+                        const filteredMessages = data.data.filter(message => 
                             message && 
                             message.id && 
                             message.name && 
                             message.content && 
                             message.timestamp
                         );
+                        console.log(`成功获取到 ${filteredMessages.length} 条留言`);
+                        return filteredMessages;
                     } else if (Array.isArray(data)) {
                         // 如果直接返回数组，也兼容处理
-                        return data.filter(message => 
+                        const filteredMessages = data.filter(message => 
                             message && 
                             message.id && 
                             message.name && 
                             message.content && 
                             message.timestamp
                         );
+                        console.log(`成功获取到 ${filteredMessages.length} 条留言`);
+                        return filteredMessages;
                     }
+                    console.log('未获取到有效留言数据');
                     return [];
                 });
+            })
+            .catch(error => {
+                console.error('获取留言失败:', error);
+                // 出错时返回空数组，确保系统不会崩溃
+                return [];
             });
     }
     
@@ -376,6 +389,55 @@ document.addEventListener('DOMContentLoaded', function() {
     const activeMessages = [];
     const MESSAGE_HEIGHT = 30; // 估计的弹幕高度
     const MIN_VERTICAL_SPACING = 20; // 最小垂直间距
+    
+    // 轨道系统
+    let messageTracks = [];
+    const NUM_TRACKS = 8; // 轨道数量增加到8条
+    let lastTrackIndex = -1; // 上次使用的轨道索引，避免连续使用同一条轨道
+    
+    // 初始化轨道 - 使用固定的垂直间距
+    function initializeTracks(containerHeight, containerTop) {
+        messageTracks = [];
+        
+        // 使用更简单的轨道计算方式
+        const availableHeight = Math.max(250, containerHeight - 30); // 进一步增加可用高度，缩短边距
+        const verticalSpacing = availableHeight / (NUM_TRACKS + 0.2); // 进一步减少除数，显著缩短轨道间距离
+        
+        // 创建8条轨道
+        for (let i = 0; i < NUM_TRACKS; i++) {
+            const top = containerTop + (i + 1) * verticalSpacing - MESSAGE_HEIGHT / 2;
+            messageTracks.push({
+                top: Math.floor(top), // 确保top值为整数
+                index: i // 轨道索引，用于调试
+            });
+        }
+        
+        console.log(`初始化了 ${messageTracks.length} 条弹幕轨道，轨道间距已缩短`, messageTracks);
+    }
+    
+    // 获取一个可用的轨道 - 使用随机方式避免过于规整
+    function getAvailableTrack(messageWidth, duration) {
+        // 如果没有轨道，返回默认位置
+        if (messageTracks.length === 0) {
+            console.warn('轨道系统未初始化');
+            return Math.floor(window.innerHeight / 2);
+        }
+        
+        // 使用随机方式选择轨道，但避免连续使用同一条轨道
+        let availableTracks = messageTracks;
+        if (lastTrackIndex !== -1 && messageTracks.length > 1) {
+            // 排除上次使用的轨道，增加随机性
+            availableTracks = messageTracks.filter(track => track.index !== lastTrackIndex);
+        }
+        
+        // 从可用轨道中随机选择一个
+        const randomIndex = Math.floor(Math.random() * availableTracks.length);
+        const selectedTrack = availableTracks[randomIndex];
+        
+        // 更新上次使用的轨道索引
+        lastTrackIndex = selectedTrack.index;
+        return selectedTrack.top;
+    }
     
     // 随机显示单条留言
     function displayMessage(name, content) {
@@ -393,83 +455,58 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 强制计算以获取实际宽度
         const messageWidth = messageElement.offsetWidth;
-        const viewportHeight = window.innerHeight;
         const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+        
+        let top;
         
         // 限制弹幕范围在选中的div区域内显示
         const targetDiv = document.querySelector('.image-section');
-        let top;
-        let attempts = 0;
-        const MAX_ATTEMPTS = 10; // 最大尝试次数
-        let validPositionFound = false;
-        
         if (targetDiv) {
             const divRect = targetDiv.getBoundingClientRect();
             const divTop = divRect.top + scrollY;
             const divHeight = divRect.height;
-            const minTop = divTop;
-            const maxTop = divTop + divHeight - MESSAGE_HEIGHT;
             
-            // 尝试找到一个不与现有弹幕重叠的位置
-            while (!validPositionFound && attempts < MAX_ATTEMPTS) {
-                // 生成候选位置
-                top = Math.floor(Math.random() * (maxTop - minTop + 1) + minTop);
-                
-                // 检查是否与现有弹幕重叠
-                let positionConflict = false;
-                for (const msg of activeMessages) {
-                    // 检查垂直位置冲突
-                    if (Math.abs(top - msg.top) < MESSAGE_HEIGHT + MIN_VERTICAL_SPACING) {
-                        positionConflict = true;
-                        break;
-                    }
-                }
-                
-                // 如果没有冲突，接受这个位置
-                if (!positionConflict) {
-                    validPositionFound = true;
-                }
-                
-                attempts++;
+            // 确保轨道系统正确初始化
+            if (messageTracks.length === 0) {
+                initializeTracks(divHeight, divTop);
+            }
+            // 验证轨道数量，如果不足则重新初始化
+            if (messageTracks.length !== NUM_TRACKS) {
+                initializeTracks(divHeight, divTop);
             }
             
-            // 如果无法找到无冲突的位置，仍然使用随机位置
-            if (!validPositionFound) {
-                top = Math.floor(Math.random() * (maxTop - minTop + 1) + minTop);
-            }
+            // 估算动画时长，用于计算水平间距
+            const estimatedDuration = Math.max(COUNTER_CONFIG.messageSystem.minDuration, 
+                Math.min(COUNTER_CONFIG.messageSystem.maxDuration, 
+                COUNTER_CONFIG.messageSystem.baseDuration / (1 + Math.log10(messageWidth / 100))));
+                
+            // 获取可用轨道位置
+            top = getAvailableTrack(messageWidth, estimatedDuration);
         } else {
-            // 后备方案：如果找不到目标div，使用视口范围
+            // 后备方案：使用视口范围和轨道系统
+            const viewportHeight = window.innerHeight;
             const minTop = scrollY + 50;
             const maxTop = scrollY + viewportHeight - MESSAGE_HEIGHT;
+            const availableHeight = maxTop - minTop;
             
-            // 尝试找到一个不与现有弹幕重叠的位置
-            while (!validPositionFound && attempts < MAX_ATTEMPTS) {
-                // 生成候选位置
-                top = Math.floor(Math.random() * (maxTop - minTop + 1) + minTop);
-                
-                // 检查是否与现有弹幕重叠
-                let positionConflict = false;
-                for (const msg of activeMessages) {
-                    // 检查垂直位置冲突
-                    if (Math.abs(top - msg.top) < MESSAGE_HEIGHT + MIN_VERTICAL_SPACING) {
-                        positionConflict = true;
-                        break;
-                    }
-                }
-                
-                // 如果没有冲突，接受这个位置
-                if (!positionConflict) {
-                    validPositionFound = true;
-                }
-                
-                attempts++;
+            // 确保轨道系统正确初始化
+            if (messageTracks.length === 0) {
+                initializeTracks(availableHeight, minTop);
+            }
+            // 验证轨道数量，如果不足则重新初始化
+            if (messageTracks.length !== NUM_TRACKS) {
+                initializeTracks(availableHeight, minTop);
             }
             
-            // 如果无法找到无冲突的位置，仍然使用随机位置
-            if (!validPositionFound) {
-                top = Math.floor(Math.random() * (maxTop - minTop + 1) + minTop);
-            }
+            // 估算动画时长，用于计算水平间距
+            const estimatedDuration = Math.max(COUNTER_CONFIG.messageSystem.minDuration, 
+                Math.min(COUNTER_CONFIG.messageSystem.maxDuration, 
+                COUNTER_CONFIG.messageSystem.baseDuration / (1 + Math.log10(messageWidth / 100))));
+                
+            // 获取可用轨道位置
+            top = getAvailableTrack(messageWidth, estimatedDuration);
         }
+        
         messageElement.style.top = `${top}px`;
         
         // 计算动画时间（根据弹幕长度）
@@ -504,6 +541,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (index !== -1) {
                         activeMessages.splice(index, 1);
                     }
+                    // 不再需要手动释放轨道占用，轨道系统现在基于时间计算间距
                 }, 500);
             }, duration);
         }, 50);
@@ -529,15 +567,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function startRandomMessageDisplay() {
         const { minDisplayInterval, maxDisplayInterval } = COUNTER_CONFIG.messageSystem;
         
+        console.log('开始随机显示留言流程');
         // 只从API获取留言
         fetchMessagesFromApi()
             .then(messages => {
                 // 如果没有留言，等待一段时间后重试
                 if (!messages || messages.length === 0) {
+                    console.log('未获取到留言，5秒后重试');
                     setTimeout(startRandomMessageDisplay, 5000);
                     return;
                 }
                 
+                console.log(`获取到 ${messages.length} 条留言，准备随机显示`);
                 // 定期随机显示留言，根据配置的间隔范围
                 const displayInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
                 
@@ -546,10 +587,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const randomIndex = Math.floor(Math.random() * messages.length);
                     const randomMessage = messages[randomIndex];
                     if (randomMessage && randomMessage.name && randomMessage.content) {
+                        console.log(`显示留言: ${randomMessage.name}: ${randomMessage.content}`);
                         displayMessage(randomMessage.name, randomMessage.content);
                     }
                     
-                    // 递归调用，持续随机显示
+                    // 递归调用，每次都重新从API获取最新留言列表
+                    console.log('准备重新从API获取最新留言列表');
                     startRandomMessageDisplay();
                 }, displayInterval);
             })
