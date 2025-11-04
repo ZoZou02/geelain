@@ -114,17 +114,12 @@
     </footer>
     
     <script>
-        // 页面加载时跳转到主页
-        window.onload = function() {
-            // 跳转到主页
-            window.location.href = '/geelain';
-        };
-        
+        // 返回首页按钮点击事件
         document.getElementById('back-home').addEventListener('click', function() {
             window.location.href = '/geelain';
         });
         
-        // 返回首页按钮点击事件
+        // 错误码闪烁效果
         setInterval(function() {
             const errorCode = document.querySelector('.error-code');
             errorCode.classList.add('counter-flash');
