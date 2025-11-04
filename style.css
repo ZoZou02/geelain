@@ -197,6 +197,172 @@
         }
     }
 
+    /* 留言功能样式 */
+    #message-container-section {
+        margin-top: 20px !important;
+        display: flow-root !important;
+        transition: all 0.3s ease;
+    }
+    
+    /* 保留原有样式作为后备 */
+    .container.message-container {
+        margin-top: 0;
+        padding-top: 20px;
+        display: flow-root;
+    }
+    
+    .message-form {
+        margin-top: 0;
+    }
+    
+    .message-form-row {
+        display: flex;
+        gap: 10px;
+        width: 100%;
+    }
+    
+    .message-form input {
+        background-color: rgba(0, 0, 0, 0.7);
+        border: 1px solid #fd2d5c;
+        color: #ffffff;
+        padding: 8px 10px;
+        font-family: 'Pixel', monospace;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        height: 36px;
+    }
+    
+    #message-name {
+        width: 150px;
+        flex-shrink: 0;
+    }
+    
+    #message-content {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    
+    .message-form input:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(253, 45, 92, 0.5);
+        border-color: #ffffff;
+    }
+    
+    /* 错误输入框样式 */
+    .error-input {
+        border-color: #ff0000 !important;
+        background-color: rgba(255, 0, 0, 0.1) !important;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.4) !important;
+        transition: all 0.3s ease;
+    }
+    
+    /* 确保textarea也应用相同的错误样式 */
+    textarea.error-input {
+        border-color: #ff0000 !important;
+        background-color: rgba(255, 0, 0, 0.1) !important;
+        box-shadow: 0 0 8px rgba(255, 0, 0, 0.4) !important;
+    }
+    
+    /* 错误提示消息样式 */
+    .submit-error-message {
+        color: #ff0000;
+        font-family: 'Pixel', monospace;
+        font-size: 0.9rem;
+        margin-top: 5px;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-5px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .message-form input::placeholder {
+        color: rgba(255, 255, 255, 0.6);
+    }
+    
+    #char-count {
+        display: block;
+        margin-top: 5px;
+        color: #fd2d5c;
+        font-size: 0.9rem;
+        text-align: right;
+    }
+    
+    .submit-button {
+        flex-shrink: 0;
+        background-color: #fd2d5c;
+        color: #000000;
+        border: 2px solid #ffffff;
+        padding: 0 24px;
+        font-family: 'Pixel', monospace;
+        font-size: 1.1em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        outline: none;
+        text-shadow: 0 0 3px rgba(255, 255, 255, 0.3);
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .submit-button:hover {
+        background-color: #ffffff;
+        color: #fd2d5c;
+        border-color: #fd2d5c;
+        transform: scale(1.05);
+    }
+    
+    .submit-button:active {
+        transform: scale(0.95);
+    }
+    
+    .messages-display-area {
+        width: 100%;
+        min-height: 300px;
+        margin-top: 40px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .messages-container {
+        width: 100%;
+        min-height: 300px;
+        position: relative;
+    }
+    
+    .message-item {
+    position: absolute;
+    left: 100%;
+    white-space: nowrap;
+    padding: 5px 10px;
+    font-family: inherit;
+    font-size: 18px;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0;
+}
+    
+    .message-item .message-content {
+        color: #ffffff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(253, 45, 92, 0.3);
+    }
+    
+    .message-item .message-author {
+        color: #fd2d5c;
+        font-weight: bold;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8), 0 0 10px rgba(253, 45, 92, 0.6);
+    }
+    
     /* 分隔图片容器 */
     .background-separator {
         width: 100%;
@@ -357,6 +523,49 @@
         display: inline-block;
         animation: intermittentShake 3s infinite ease-in-out;
         min-width: 120px;
+    }
+    
+    /* 宽屏模式下的时间显示 - 确保连续无空隙 */
+    @media (min-width: 769px) {
+        #offline-timer {
+            display: inline-block;
+            min-width: 120px;
+        }
+        
+        .timer-hours,
+        .timer-minutes-seconds {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+    }
+    
+    /* 手机版时间显示优化 */
+    @media (max-width: 768px) {
+        #offline-timer {
+            display: block;
+            text-align: center;
+            min-width: auto;
+            font-size: 2.5rem;
+            line-height: 1.2;
+        }
+        
+        /* 小时部分单独一行 */
+        .timer-hours {
+            display: block;
+            margin-bottom: 0.2em;
+        }
+        
+        /* 分秒部分在第二行 */
+        .timer-minutes-seconds {
+            display: block;
+            margin-top: 0.2em;
+        }
+        
+        /* 确保单位符号正常显示 */
+        .timer-unit {
+            display: inline;
+        }
     }
 
     /* 为"时"、"分"、"秒"汉字设置白色样式 */

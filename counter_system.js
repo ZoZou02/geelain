@@ -39,22 +39,31 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 次计数器自增（带重试）
-    function incrementSecondaryWithRetry(retries = 2) {
+    // 添加超时功能的fetch封装
+    function fetchWithTimeout(url, options = {}, timeout = 3000) {
+        return Promise.race([
+            fetch(url, options),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时')), timeout))
+        ]);
+    }
+
+    // 次计数器自增（优化版，减少重试次数）
+    function incrementSecondaryWithRetry(retries = 1) {
         const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.secondaryCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.secondaryCounter.id}`;
-        return fetch(url)
+        return fetchWithTimeout(url, {}, 3000)
             .then(r => r.json())
             .then(data => {
                 // 检查是否为API key错误
                 if (data && data.error === 'Invalid API key') {
                     console.error('[API模式] 第二计数器增加请求中检测到Invalid API key错误');
-                    window.location.href = '/geelain/g503.html';
-                    return;
+                    // 使用handleApiError统一处理跳转
+                    return handleApiError('API密钥无效');
                 }
                 
                 if (!(data && data.success)) {
                     if (retries > 0) {
                         console.warn(`[API模式] 第二计数器增加失败，重试剩余 ${retries} 次`);
+                        // 减少重试次数，加快失败响应
                         return incrementSecondaryWithRetry(retries - 1);
                     }
                     throw new Error(data && data.message ? data.message : '第二计数器增加失败');
@@ -65,11 +74,11 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(err => {
                 if (retries > 0) {
                     console.warn(`[API模式] 第二计数器增加请求异常，重试剩余 ${retries} 次: ${err.message}`);
-                    return incrementSecondaryWithRetry(retries - 1);
+                    // 添加短暂延迟后重试，避免立即重试导致的服务器压力
+                    return new Promise(resolve => setTimeout(() => resolve(incrementSecondaryWithRetry(retries - 1)), 300));
                 }
                 console.error(`[API模式] 第二计数器增加最终失败: ${err.message}`);
-                console.error('[API模式] 重试失败，跳转到503页面');
-                window.location.href = '/geelain/g503.html';
+                return handleApiError('重试失败');
             });
     }
 
@@ -110,9 +119,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const primaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.primaryCounter.id}`;
         const secondaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.secondaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.secondaryCounter.id}`;
 
+        // 添加请求超时和错误处理优化
         Promise.all([
-            fetch(primaryUrl).then(r => r.json()).catch(err => ({ error: err })),
-            fetch(secondaryUrl).then(r => r.json()).catch(err => ({ error: err }))
+            fetchWithTimeout(primaryUrl, {}, 3000).then(r => r.json()).catch(err => ({ error: err || new Error('请求失败') })),
+            fetchWithTimeout(secondaryUrl, {}, 3000).then(r => r.json()).catch(err => ({ error: err || new Error('请求失败') }))
         ])
         .then(([pRes, sRes]) => {
             // 检查是否存在API key错误
@@ -173,9 +183,10 @@ document.addEventListener('DOMContentLoaded', function() {
     function getPrimarySecondaryCounts() {
         const primaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.primaryCounter.id}`;
         const secondaryUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.secondaryCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.secondaryCounter.id}`;
+        // 使用带超时的fetch
         return Promise.all([
-            fetch(primaryUrl).then(r => r.json()).catch(() => null),
-            fetch(secondaryUrl).then(r => r.json()).catch(() => null)
+            fetchWithTimeout(primaryUrl, {}, 3000).then(r => r.json()).catch(() => null),
+            fetchWithTimeout(secondaryUrl, {}, 3000).then(r => r.json()).catch(() => null)
         ]).then(([pRes, sRes]) => {
             const primary = parseCountFromGetResponse(pRes);
             const secondary = parseCountFromGetResponse(sRes);
@@ -199,8 +210,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // 处理API错误，直接跳转到503页面
     function handleApiError(errorMsg) {
         console.error(`[API模式] ${errorMsg}`);
-        console.error('[API模式] API不可用，跳转到503页面');
+        console.error('[API模式] API不可用，立即跳转到503页面');
+        // 立即执行跳转，不等待后续操作
         window.location.href = '/geelain/g503.html';
+        // 返回一个rejected的Promise，保持Promise链的一致性
+        return Promise.reject(new Error(errorMsg));
     }
     
     // 优化版本，支持快速连续点击和阈值重置逻辑
@@ -285,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`[API模式] 发送API请求，增加点击数: ${clickCount}`);
                 const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.primaryCounter.id}&value=${clickCount}`;
                 
-                fetch(url)
+                fetchWithTimeout(url, {}, 3000)
                     .then(response => response.json())
                     .then(data => {
                         // 检查是否为API key错误
@@ -303,9 +317,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 if (primary >= effectiveThreshold) {
                                     console.log('[API模式] 达到重置阈值，准备重置主计数器并增加第二计数器');
                                     const resetUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.resetAction || 'reset'}&counter_id=${CONFIG.primaryCounter.id}`;
-                                    return fetch(resetUrl)
-                                        .then(r => r.json())
-                                        .then(resetData => {
+                                    return fetchWithTimeout(resetUrl, {}, 3000)
+                                                .then(r => r.json())
+                                                .then(resetData => {
                                             // 检查重置请求是否有API key错误
                                             if (resetData && resetData.error === 'Invalid API key') {
                                                 console.error('[API模式] 重置请求中检测到Invalid API key错误');
@@ -368,9 +382,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const url = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.primaryCounter.id}&value=${count}`;
         
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
+        fetchWithTimeout(url, {}, 3000)
+                    .then(response => response.json())
+                    .then(data => {
                 // 检查是否为API key错误
                 if (data && data.error === 'Invalid API key') {
                     console.error('[API模式] API响应中检测到Invalid API key错误');
@@ -386,9 +400,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (primary >= effectiveThreshold) {
                             console.log('[API模式] 达到重置阈值，准备重置主计数器并增加第二计数器');
                             const resetUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.primaryCounter.apiKey}&action=${CONFIG.api.resetAction || 'reset'}&counter_id=${CONFIG.primaryCounter.id}`;
-                            return fetch(resetUrl)
-                                .then(r => r.json())
-                                .then(resetData => {
+                            return fetchWithTimeout(resetUrl, {}, 3000)
+                                                .then(r => r.json())
+                                                .then(resetData => {
                                     // 检查重置请求是否有API key错误
                                     if (resetData && resetData.error === 'Invalid API key') {
                                         console.error('[API模式] 重置请求中检测到Invalid API key错误');

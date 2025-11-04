@@ -131,7 +131,7 @@ window.addEventListener('DOMContentLoaded', function() {
             // 立即设置长按状态为false
             isLongPressing = false;
             
-            console.log(`触摸持续时间: ${touchDuration}ms`);
+            // console.log(`触摸持续时间: ${touchDuration}ms`);
         }
         
         // 为鼠标设备添加事件监听
