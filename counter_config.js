@@ -62,7 +62,7 @@ const COUNTER_CONFIG = {
         warningThreshold: 40,
         
         // 随机显示间隔范围（毫秒）
-        minDisplayInterval: 1000,
+        minDisplayInterval: 500,
         maxDisplayInterval: 3500,
         
         // 弹幕动画时长（毫秒）
