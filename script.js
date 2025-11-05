@@ -206,11 +206,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // 显示新留言 - 直接在body中显示
                         displayMessage(name, content);
-                        
-                        // 发送成功后立即刷新留言列表
-                        if (window.refreshMessageList) {
-                            window.refreshMessageList();
-                        }
                     })
                     .catch(error => {
                         console.error('提交失败:', error);
@@ -528,67 +523,39 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 随机显示已有留言的函数
-    let messageList = []; // 存储获取到的留言列表
-    let displayIntervalId = null; // 显示间隔的定时器ID
-    let refreshIntervalId = null; // 刷新数据的定时器ID
-    
     function startRandomMessageDisplay() {
         const { minDisplayInterval, maxDisplayInterval } = COUNTER_CONFIG.messageSystem;
-        const REFRESH_INTERVAL = 15000; // 15秒刷新一次数据
         
-        // 获取留言数据的函数
-        function fetchMessagesData() {
-            fetchMessagesFromApi()
-                .then(messages => {
-                    if (messages && messages.length > 0) {
-                        messageList = messages;
-                    }
-                })
-                .catch(error => {
-                    console.error('获取留言失败:', error);
-                });
-        }
-        
-        // 显示单条随机留言的函数
-        function displayRandomMessage() {
-            if (messageList.length === 0) {
-                return; // 如果没有留言，不显示
-            }
-            
-            // 随机选择一条留言
-            const randomIndex = Math.floor(Math.random() * messageList.length);
-            const randomMessage = messageList[randomIndex];
-            if (randomMessage && randomMessage.name && randomMessage.content) {
-                displayMessage(randomMessage.name, randomMessage.content);
-            }
-            
-            // 设置下一次显示的间隔
-            const displayInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
-            displayIntervalId = setTimeout(displayRandomMessage, displayInterval);
-        }
-        
-        // 初始化：先获取一次数据
-        fetchMessagesData();
-        
-        // 设置15秒自动刷新数据的定时器
-        refreshIntervalId = setInterval(fetchMessagesData, REFRESH_INTERVAL);
-        
-        // 开始显示留言
-        displayRandomMessage();
-    }
-    
-    // 公开一个方法，供其他地方（如发送留言后）调用刷新数据
-    window.refreshMessageList = function() {
+        // 只从API获取留言
         fetchMessagesFromApi()
             .then(messages => {
-                if (messages && messages.length > 0) {
-                    messageList = messages;
+                // 如果没有留言，等待一段时间后重试
+                if (!messages || messages.length === 0) {
+                    setTimeout(startRandomMessageDisplay, 5000);
+                    return;
                 }
+                
+                // 定期随机显示留言，根据配置的间隔范围
+                const displayInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
+                
+                setTimeout(() => {
+                    // 随机选择一条留言
+                    const randomIndex = Math.floor(Math.random() * messages.length);
+                    const randomMessage = messages[randomIndex];
+                    if (randomMessage && randomMessage.name && randomMessage.content) {
+                        displayMessage(randomMessage.name, randomMessage.content);
+                    }
+                    
+                    // 非递归方式：通过setTimeout创建新的任务来获取最新留言列表
+                    setTimeout(startRandomMessageDisplay, 5000);
+                }, displayInterval);
             })
             .catch(error => {
-                console.error('刷新留言失败:', error);
+                console.error('获取留言失败:', error);
+                // 出错后等待一段时间重试
+                setTimeout(startRandomMessageDisplay, 5000);
             });
-    };
+    }
     
     // HTML转义函数
     function escapeHtml(text) {
