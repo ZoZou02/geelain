@@ -444,7 +444,7 @@ textarea.error-input {
 
 /* 分隔图片样式 */
 .separator-image {
-    max-width: 100%;
+    max-width: 80%;
     height: auto;
     image-rendering: pixelated;
     position: relative;
