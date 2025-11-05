@@ -718,6 +718,22 @@ p {
     display: block;
 }
 
+/* 确保眼睛SVG与数字对齐 */
+.view-counter svg {
+    display: inline-block;
+    vertical-align: bottom;
+    margin-right: 4px;
+    /* 微调位置确保所有屏幕一致对齐 */
+    margin-bottom: -1px;
+}
+
+.view-counter span {
+    display: inline-block;
+    vertical-align: bottom;
+    /* 确保文字基线对齐 */
+    line-height: 1;
+}
+
 .site-footer p:first-child {
     color: #fd2d5c;
     font-weight: bold;
