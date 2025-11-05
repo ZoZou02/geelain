@@ -95,21 +95,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 留言功能实现
     function initMessageSystem() {
-        console.log('开始初始化留言系统');
         const nameInput = document.getElementById('message-name');
         const contentTextarea = document.getElementById('message-content');
         const charCount = document.getElementById('char-count');
         const submitButton = document.getElementById('submit-message');
         const messagesContainer = document.getElementById('messages-container');
         const { maxLength, maxNameLength, warningThreshold } = COUNTER_CONFIG.messageSystem;
-        
-        console.log('留言系统元素状态:', {
-            nameInput: !!nameInput,
-            contentTextarea: !!contentTextarea,
-            charCount: !!charCount,
-            submitButton: !!submitButton,
-            messagesContainer: !!messagesContainer
-        });
         
         // 设置输入框最大长度
         if (nameInput) nameInput.maxLength = maxNameLength;
@@ -132,8 +123,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 表单提交处理
         if (submitButton && nameInput && contentTextarea) {
-            console.log('留言系统初始化完成');
-            
             // 添加错误样式类定义
             const addErrorStyle = (element) => {
                 element.classList.add('error-input');
@@ -184,16 +173,12 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             submitButton.addEventListener('click', function() {
-                console.log('提交按钮被点击');
                 const name = nameInput.value.trim();
                 const content = contentTextarea.value.trim();
                 let isValid = true;
                 
-                console.log('表单输入内容:', {name, content});
-                
                 // 验证输入并标红错误字段
                 if (!name) {
-                    console.log('表单验证失败：名字为空');
                     addErrorStyle(nameInput);
                     isValid = false;
                 } else {
@@ -201,7 +186,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 
                 if (!content) {
-                    console.log('表单验证失败：内容为空');
                     addErrorStyle(contentTextarea);
                     isValid = false;
                 } else {
@@ -212,11 +196,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                console.log('表单验证通过，准备调用submitMessage函数');
                 // 调用API提交留言
                 submitMessage(name, content)
                     .then(() => {
-                        console.log('留言提交成功');
                         // 成功后清空表单
                         nameInput.value = '';
                         contentTextarea.value = '';
@@ -224,7 +206,11 @@ document.addEventListener('DOMContentLoaded', function() {
                         
                         // 显示新留言 - 直接在body中显示
                         displayMessage(name, content);
-                        console.log('新留言已显示');
+                        
+                        // 发送成功后立即刷新留言列表
+                        if (window.refreshMessageList) {
+                            window.refreshMessageList();
+                        }
                     })
                     .catch(error => {
                         console.error('提交失败:', error);
@@ -249,11 +235,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
             });
         } else {
-            console.error('留言系统初始化失败，缺少必要元素:', {
-                submitButton: !!submitButton,
-                nameInput: !!nameInput,
-                contentTextarea: !!contentTextarea
-            });
+            console.error('留言系统初始化失败，缺少必要元素');
         }
         
         startRandomMessageDisplay();
@@ -264,7 +246,6 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             const { api } = COUNTER_CONFIG.messageSystem;
-            console.log('获取配置:', {api});
             
             if (!api || !api.baseUrl || !api.submitAction) {
                 console.error('API配置不完整');
@@ -278,16 +259,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // 添加8小时以转换为北京时间
             const beijingTime = new Date(now.getTime() + 8 * 60 * 60 * 1000);
             const timestamp = beijingTime.toISOString();
-            console.log('生成北京时间戳:', timestamp);
             
             // URL编码参数，确保中文正确传递
             const encodedName = encodeURIComponent(name);
             const encodedContent = encodeURIComponent(content);
-            console.log('编码后的参数:', {encodedName, encodedContent});
             
             // 构建GET请求URL，带查询参数
             const apiUrl = `${baseUrl}/${submitAction}?name=${encodedName}&content=${encodedContent}&timestamp=${timestamp}`;
-            console.log('构建的API URL:', apiUrl);
             
             // 真实API调用 - 改为GET请求，添加缓存控制选项
             return fetch(apiUrl, {
@@ -299,14 +277,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             })
                 .then(response => {
-                    console.log('API响应状态:', response.status);
                     if (!response.ok) {
                         throw new Error(`网络响应错误: ${response.status}`);
                     }
                     return response.json();
                 })
                 .then(data => {
-                    console.log('API返回数据:', data);
                     // 验证响应格式
                     if (data && data.success === true) {
                         // 返回API提供的完整消息数据
@@ -329,8 +305,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const timestamp = new Date().getTime();
         const apiUrl = `${baseUrl}/${getAction}?t=${timestamp}`;
         
-        console.log('正在从API获取最新留言列表:', apiUrl);
-        
         // 添加缓存控制选项，确保每次都获取最新数据
         return fetch(apiUrl, {
             method: 'GET',
@@ -342,14 +316,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
             .then(response => {
-                console.log('API响应状态:', response.status);
                 if (!response.ok) {
                     throw new Error(`网络响应错误: ${response.status}`);
                 }
                 // 确保从响应中提取正确的数据结构
                 return response.json().then(data => {
-                    console.log('API返回数据:', data);
-                    
                     // 确认API返回格式为 { success: true, data: [...] }，其中每个item包含id、name、content和timestamp字段
                     if (data && data.success && Array.isArray(data.data)) {
                         // 过滤并确保每个消息对象都包含必要的字段
@@ -360,7 +331,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             message.content && 
                             message.timestamp
                         );
-                        console.log(`成功获取到 ${filteredMessages.length} 条留言`);
                         return filteredMessages;
                     } else if (Array.isArray(data)) {
                         // 如果直接返回数组，也兼容处理
@@ -371,16 +341,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             message.content && 
                             message.timestamp
                         );
-                        console.log(`成功获取到 ${filteredMessages.length} 条留言`);
                         return filteredMessages;
                     }
-                    console.log('未获取到有效留言数据');
                     return [];
                 });
             })
             .catch(error => {
                 console.error('获取留言失败:', error);
-                // 出错时返回空数组，确保系统不会崩溃
                 return [];
             });
     }
@@ -411,15 +378,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 index: i // 轨道索引，用于调试
             });
         }
-        
-        console.log(`初始化了 ${messageTracks.length} 条弹幕轨道，轨道间距已缩短`, messageTracks);
     }
     
     // 获取一个可用的轨道 - 使用随机方式避免过于规整
     function getAvailableTrack(messageWidth, duration) {
         // 如果没有轨道，返回默认位置
         if (messageTracks.length === 0) {
-            console.warn('轨道系统未初始化');
             return Math.floor(window.innerHeight / 2);
         }
         
@@ -564,44 +528,67 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // 随机显示已有留言的函数
+    let messageList = []; // 存储获取到的留言列表
+    let displayIntervalId = null; // 显示间隔的定时器ID
+    let refreshIntervalId = null; // 刷新数据的定时器ID
+    
     function startRandomMessageDisplay() {
         const { minDisplayInterval, maxDisplayInterval } = COUNTER_CONFIG.messageSystem;
+        const REFRESH_INTERVAL = 15000; // 15秒刷新一次数据
         
-        console.log('开始随机显示留言流程');
-        // 只从API获取留言
+        // 获取留言数据的函数
+        function fetchMessagesData() {
+            fetchMessagesFromApi()
+                .then(messages => {
+                    if (messages && messages.length > 0) {
+                        messageList = messages;
+                    }
+                })
+                .catch(error => {
+                    console.error('获取留言失败:', error);
+                });
+        }
+        
+        // 显示单条随机留言的函数
+        function displayRandomMessage() {
+            if (messageList.length === 0) {
+                return; // 如果没有留言，不显示
+            }
+            
+            // 随机选择一条留言
+            const randomIndex = Math.floor(Math.random() * messageList.length);
+            const randomMessage = messageList[randomIndex];
+            if (randomMessage && randomMessage.name && randomMessage.content) {
+                displayMessage(randomMessage.name, randomMessage.content);
+            }
+            
+            // 设置下一次显示的间隔
+            const displayInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
+            displayIntervalId = setTimeout(displayRandomMessage, displayInterval);
+        }
+        
+        // 初始化：先获取一次数据
+        fetchMessagesData();
+        
+        // 设置15秒自动刷新数据的定时器
+        refreshIntervalId = setInterval(fetchMessagesData, REFRESH_INTERVAL);
+        
+        // 开始显示留言
+        displayRandomMessage();
+    }
+    
+    // 公开一个方法，供其他地方（如发送留言后）调用刷新数据
+    window.refreshMessageList = function() {
         fetchMessagesFromApi()
             .then(messages => {
-                // 如果没有留言，等待一段时间后重试
-                if (!messages || messages.length === 0) {
-                    console.log('未获取到留言，5秒后重试');
-                    setTimeout(startRandomMessageDisplay, 5000);
-                    return;
+                if (messages && messages.length > 0) {
+                    messageList = messages;
                 }
-                
-                console.log(`获取到 ${messages.length} 条留言，准备随机显示`);
-                // 定期随机显示留言，根据配置的间隔范围
-                const displayInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
-                
-                setTimeout(() => {
-                    // 随机选择一条留言
-                    const randomIndex = Math.floor(Math.random() * messages.length);
-                    const randomMessage = messages[randomIndex];
-                    if (randomMessage && randomMessage.name && randomMessage.content) {
-                        console.log(`显示留言: ${randomMessage.name}: ${randomMessage.content}`);
-                        displayMessage(randomMessage.name, randomMessage.content);
-                    }
-                    
-                    // 递归调用，每次都重新从API获取最新留言列表
-                    console.log('准备重新从API获取最新留言列表');
-                    startRandomMessageDisplay();
-                }, displayInterval);
             })
             .catch(error => {
-                console.error('获取留言失败:', error);
-                // 出错后等待一段时间重试
-                setTimeout(startRandomMessageDisplay, 5000);
+                console.error('刷新留言失败:', error);
             });
-    }
+    };
     
     // HTML转义函数
     function escapeHtml(text) {
