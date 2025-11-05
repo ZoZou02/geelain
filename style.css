@@ -29,13 +29,12 @@ body {
 a {
     color: #ffffff;
     text-decoration: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.8);
-    transition: color 0.2s ease, border-color 0.2s ease, text-shadow 0.2s ease;
+    border-bottom: none;
+    transition: color 0.2s ease, text-shadow 0.2s ease;
 }
 
 a:hover {
     color: #fd2d5c;
-    border-bottom-color: #fd2d5c;
     text-shadow: 0 0 8px rgba(253, 45, 92, 0.8);
 }
 
@@ -734,12 +733,27 @@ p {
     display: block;
 }
 
+/* 链接图标样式 */
+.link-icon {
+    display: inline-block;
+    margin-right: 6px;
+    vertical-align: middle;
+    fill: currentColor;
+    transition: transform 0.2s ease;
+}
+
+.footer-section-content a:hover .link-icon {
+    transform: scale(1.1);
+}
+
 /* 页脚链接样式 */
 .footer-section-content a {
     color: #ffffff;
     text-decoration: none;
-    border-bottom: 1px solid #ffffff;
+    border-bottom: none;
     transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
 }
 
 .footer-section-content a:hover {
