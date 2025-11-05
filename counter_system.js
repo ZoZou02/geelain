@@ -24,6 +24,76 @@ document.addEventListener('DOMContentLoaded', function() {
     // 点击计数器，控制数据更新频率
     let clickCount = 0;
     
+    // 获取访问计数器元素
+    const viewCounterElement = document.getElementById('view');
+    
+    // 初始化访问计数器
+    function initViewCounter() {
+        // 检查是否应该增加访问计数（避免重复计数）
+        if (CONFIG.viewCounter.useLocalStorage && !localStorage.getItem(CONFIG.viewCounter.storageKey)) {
+            // 标记为已访问
+            localStorage.setItem(CONFIG.viewCounter.storageKey, 'true');
+            // 增加访问计数
+            incrementViewCounter();
+        }
+        // 加载访问计数
+        loadViewCounter();
+    }
+    
+    // 增加访问计数
+    function incrementViewCounter() {
+        if (CONFIG.mode === 'api') {
+            const viewUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.viewCounter.apiKey}&action=${CONFIG.api.incrementAction}&counter_id=${CONFIG.viewCounter.id}`;
+            fetchWithTimeout(viewUrl, {}, 3000)
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.error === 'Invalid API key') {
+                        console.error('[API模式] 访问计数器增加请求中检测到Invalid API key错误');
+                    } else if (data && data.success) {
+                        console.log('[API模式] 访问计数器增加成功');
+                    }
+                })
+                .catch(err => {
+                    console.error(`[API模式] 访问计数器增加失败: ${err.message}`);
+                });
+        } else {
+            // 本地模式：不实际增加计数
+        }
+    }
+    
+    // 加载访问计数
+    function loadViewCounter() {
+        if (CONFIG.mode === 'api') {
+            const viewUrl = `${CONFIG.api.baseUrl}?api_key=${CONFIG.viewCounter.apiKey}&action=${CONFIG.api.getAction}&counter_id=${CONFIG.viewCounter.id}`;
+            fetchWithTimeout(viewUrl, {}, 3000)
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.error === 'Invalid API key') {
+                        console.error('[API模式] 访问计数器获取请求中检测到Invalid API key错误');
+                        return;
+                    }
+                    
+                    if (data && data.success && data.counter && data.counter.current_count) {
+                        const viewCount = parseInt(data.counter.current_count) || 0;
+                        updateViewCounterDisplay(viewCount);
+                    }
+                })
+                .catch(err => {
+                    console.error(`[API模式] 访问计数器获取失败: ${err.message}`);
+                });
+        } else {
+            // 本地模式：不显示模拟数据，显示0
+            updateViewCounterDisplay(0);
+        }
+    }
+    
+    // 更新访问计数器显示
+    function updateViewCounterDisplay(count) {
+        if (viewCounterElement) {
+            viewCounterElement.textContent = count.toLocaleString();
+        }
+    }
+    
     // 初始化本地点击计数器（本地存储）
     let localClickCount = localStorage.getItem('geebarLocalClicks') ? parseInt(localStorage.getItem('geebarLocalClicks')) : 0;
     
@@ -1304,6 +1374,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 添加定期自动更新功能，保存定时器引用以便在长按期间控制
     let autoUpdateInterval = setInterval(loadCounters, CONFIG.autoUpdateInterval);
+    
+    // 初始化访问计数器
+    initViewCounter();
     
     // 添加模式切换UI（可选功能，可以在控制台手动调用）
     window.switchCounterMode = function(mode) {

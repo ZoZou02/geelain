@@ -35,6 +35,15 @@ const COUNTER_CONFIG = {
         id: '1002',
         apiKey: '911612',
     },
+    
+    // 访问次数计数器配置
+    viewCounter: {
+        id: 'views',
+        apiKey: '911612',
+        // 是否使用本地存储避免重复计数（基于会话）
+        useLocalStorage: true,
+        storageKey: 'geebarPageViewed'
+    },
 
     // 本地模式模拟参数（保留以备将来可能的调试需要）
     local: {
