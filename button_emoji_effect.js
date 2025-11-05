@@ -1,6 +1,49 @@
 // 基于按钮位置的表情包弹出效果
+
+// 表情包图片数组
+const emojiImages = [
+    'assets/img/BIGGER.png',
+    'assets/img/LIGHT.png',
+    'assets/img/HAHA.png',
+    'assets/img/Q.png',
+    'assets/img/DEEK.png',
+    'assets/img/GRAIN.png',
+    'assets/img/MYBAD.png',
+    'assets/img/SAD.png',
+    'assets/img/SHAME.png',
+    'assets/img/SLEEP.png'
+];
+
+// 预加载表情包图片的函数
+function preloadEmojiImages() {
+    console.log('开始预加载表情包图片');
+    const loadedImages = [];
+    
+    emojiImages.forEach((src, index) => {
+        const img = new Image();
+        img.src = src;
+        
+        img.onload = () => {
+            loadedImages.push(src);
+            
+            // 当所有图片都加载完成时
+            if (loadedImages.length === emojiImages.length) {
+                console.log('所有表情包图片预加载完成');
+            }
+        };
+        
+        img.onerror = () => {
+            console.warn(`图片加载失败: ${src}`);
+            // 即使某个图片加载失败，也要继续尝试加载其他图片
+            loadedImages.push(src);
+        };
+    });
+}
+
 // 等待DOM加载完成
 window.addEventListener('DOMContentLoaded', function() {
+    // 立即开始预加载表情包图片
+    preloadEmojiImages();
     // 获取目标按钮元素（按钮ID为'click-button'）
     const targetButton = document.getElementById('click-button');
     
@@ -222,21 +265,7 @@ function createSingleEmoji(x, y, container) {
     emoji.style.userSelect = 'none';
     emoji.style.willChange = 'transform, opacity';
     
-    // 表情包图片数组
-    const emojiImages = [
-        'assets/img/BIGGER.png',
-            'assets/img/LIGHT.png',
-            'assets/img/HAHA.png',
-            'assets/img/Q.png',
-            'assets/img/DEEK.png',
-            'assets/img/GRAIN.png',
-            'assets/img/MYBAD.png',
-            'assets/img/SAD.png',
-            'assets/img/SHAME.png',
-            'assets/img/SLEEP.png'
-    ];
-    
-    // 随机选择一个表情包图片
+    // 随机选择一个已预加载的表情包图片
     emoji.src = emojiImages[Math.floor(Math.random() * emojiImages.length)];
     
     // 随机大小（20-40px）
