@@ -473,8 +473,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // 使用对数函数让速度变化更平滑，避免过长句子太快
         // 修改计算逻辑，确保短弹幕也有足够的显示时间
         const isMobile = window.innerWidth < 768;
-        const mobileMultiplier = isMobile ? 1.5 : 1;
-        const adjustedMinDuration = minDuration * mobileMultiplier;
+        const mobileMultiplier = isMobile ? 1000 : 1;
+        const adjustedMinDuration = minDuration / mobileMultiplier;
         // 确保消息宽度至少为100px，防止短消息速度过快
         const adjustedMessageWidth = Math.max(100, messageWidth);
         const duration = Math.max(adjustedMinDuration, Math.min(maxDuration, baseDuration / (1 + Math.log10(adjustedMessageWidth / 100))));
