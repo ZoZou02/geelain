@@ -405,7 +405,7 @@ textarea.error-input {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.6);
     transform: translateX(0);
-    max-width: 80vw;
+    /* max-width: 80vw; */
 }
 
 /* 响应式设计：手机设备上减小弹幕字体大小 */
