@@ -494,10 +494,16 @@ document.addEventListener('DOMContentLoaded', function() {
             messageElement.style.transition = `transform ${duration}ms linear, opacity 0.5s ease-out`;
             messageElement.style.transform = `translateX(-${window.innerWidth + messageWidth}px)`;
             
-            // 动画结束后移除元素并从活跃弹幕列表中删除
-            // 为短弹幕额外增加500ms的显示时间，确保它们能完全通过屏幕
-            const extraTime = messageWidth < 200 ? 500 : 0;
+            // 确保弹幕完全移动出屏幕后才消失
+            // 计算弹幕完全移出屏幕所需的额外时间
+            // 总滚动距离是屏幕宽度+弹幕宽度，需要确保弹幕完全移出屏幕
+            const totalScrollDistance = window.innerWidth + messageWidth;
+            const pixelsPerMillisecond = totalScrollDistance / duration;
+            // 当弹幕完全移出屏幕时需要额外的时间：弹幕宽度 / 速度
+            const extraTime = (messageWidth / pixelsPerMillisecond) * 0.8; // 乘以0.8稍微提前一点开始淡出效果
+            
             setTimeout(() => {
+                // 只有当弹幕完全移出屏幕后才开始淡出
                 messageElement.style.opacity = '0';
                 setTimeout(() => {
                     if (messageElement.parentNode) {
@@ -508,8 +514,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (index !== -1) {
                         activeMessages.splice(index, 1);
                     }
-                    // 不再需要手动释放轨道占用，轨道系统现在基于时间计算间距
-                }, 500);
+                }, 500); // 淡出动画持续时间
             }, duration + extraTime);
         }, 50);
         
