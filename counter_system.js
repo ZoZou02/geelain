@@ -356,10 +356,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-
-        
-
-        
         // 达到阈值时更新数据（根据模式选择不同的更新方式）
         if (clickCount >= CONFIG.clickThreshold) {
             if (CONFIG.mode === 'local') {

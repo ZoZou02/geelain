@@ -113,7 +113,7 @@ const COUNTER_CONFIG = {
         
         // 随机显示间隔范围（毫秒）
         minDisplayInterval: 500,
-        maxDisplayInterval: 2500,
+        maxDisplayInterval: 1000,
         
         // 弹幕动画时长（毫秒）
         baseDuration: 15000,

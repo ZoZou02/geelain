@@ -560,7 +560,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     
                     // 非递归方式：通过setTimeout创建新的任务来获取最新留言列表
-                    setTimeout(startRandomMessageDisplay, 5000);
+                    setTimeout(startRandomMessageDisplay, displayInterval);
                 }, displayInterval);
             })
             .catch(error => {
