@@ -213,6 +213,7 @@ header {
     margin-top: 20px !important;
     display: flow-root !important;
     transition: all 0.3s ease;
+    z-index: 101;
 }
 
 /* 保留原有样式作为后备 */
