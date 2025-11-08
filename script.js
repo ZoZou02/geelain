@@ -362,7 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
         messageTracks = [];
         
         // 使用更简单的轨道计算方式
-        const availableHeight = Math.max(250, containerHeight - 30); // 进一步增加可用高度，缩短边距
+        const availableHeight = Math.max(250, containerHeight - 60); // 进一步增加可用高度，缩短边距
         const verticalSpacing = availableHeight / (NUM_TRACKS + 0.2); // 进一步减少除数，显著缩短轨道间距离
         
         // 创建8条轨道
