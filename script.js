@@ -349,25 +349,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 存储当前活跃的弹幕位置
     const activeMessages = [];
+    
+    // 弹幕配置参数 - 可根据需要调整这些值
     const MESSAGE_HEIGHT = 30; // 估计的弹幕高度
-    const MIN_VERTICAL_SPACING = 20; // 最小垂直间距
+    const NUM_TRACKS = 10; // 轨道数量 - 减少到6条可增加每条轨道的间距
+    const TOP_MARGIN = 10; // 顶部边距
+    const BOTTOM_MARGIN = 40; // 底部边距
+    const TRACK_SPACING_FACTOR = 0.8; // 轨道间距因子 - 值越小间距越大，值越大间距越小
     
     // 轨道系统
     let messageTracks = [];
-    const NUM_TRACKS = 8; // 轨道数量增加到8条
     let lastTrackIndex = -1; // 上次使用的轨道索引，避免连续使用同一条轨道
     
-    // 初始化轨道 - 使用固定的垂直间距
+    // 初始化轨道 - 可调整的垂直间距
     function initializeTracks(containerHeight, containerTop) {
         messageTracks = [];
         
-        // 使用更简单的轨道计算方式
-        const availableHeight = Math.max(250, containerHeight - 60); // 进一步增加可用高度，缩短边距
-        const verticalSpacing = availableHeight / (NUM_TRACKS + 0.2); // 进一步减少除数，显著缩短轨道间距离
+        // 计算可用高度，考虑上下边距
+        const availableHeight = Math.max(200, containerHeight - TOP_MARGIN - BOTTOM_MARGIN); 
         
-        // 创建8条轨道
+        // 计算轨道间距 - 可通过调整TRACK_SPACING_FACTOR来改变间距大小
+        // 值越小，轨道间距越大；值越大，轨道间距越小
+        const verticalSpacing = availableHeight / (NUM_TRACKS + TRACK_SPACING_FACTOR); 
+        
+        // 创建轨道
         for (let i = 0; i < NUM_TRACKS; i++) {
-            const top = containerTop + (i + 1) * verticalSpacing - MESSAGE_HEIGHT / 2;
+            // 计算轨道顶部位置，添加顶部边距偏移
+            const top = containerTop + TOP_MARGIN + (i + 0.5) * verticalSpacing - MESSAGE_HEIGHT / 2;
             messageTracks.push({
                 top: Math.floor(top), // 确保top值为整数
                 index: i // 轨道索引，用于调试

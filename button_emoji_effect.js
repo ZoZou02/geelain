@@ -47,11 +47,28 @@ window.addEventListener('DOMContentLoaded', function() {
     // 获取目标按钮元素（按钮ID为'click-button'）
     const targetButton = document.getElementById('click-button');
     
+    // 创建一个全局固定定位的容器来承载表情元素
+    let emojiContainer = document.getElementById('global-emoji-container');
+    if (!emojiContainer) {
+        emojiContainer = document.createElement('div');
+        emojiContainer.id = 'global-emoji-container';
+        emojiContainer.style.position = 'fixed';
+        emojiContainer.style.top = '0';
+        emojiContainer.style.left = '0';
+        emojiContainer.style.width = '100%';
+        emojiContainer.style.height = '100%';
+        emojiContainer.style.pointerEvents = 'none';
+        emojiContainer.style.zIndex = '2000';
+        emojiContainer.style.overflow = 'visible';
+        document.body.appendChild(emojiContainer);
+    }
+    
     if (targetButton) {
         // 为按钮创建一个包装器作为相对定位的容器
         const wrapper = document.createElement('div');
         wrapper.style.position = 'relative';
         wrapper.style.display = 'inline-block';
+        wrapper.style.overflow = 'visible';
         
         // 将按钮移动到包装器中，不克隆按钮以保留已有的事件监听器
         targetButton.parentNode.insertBefore(wrapper, targetButton);
@@ -87,15 +104,15 @@ window.addEventListener('DOMContentLoaded', function() {
 
         // 触发表情包效果的辅助函数
         function triggerEmojiEffect() {
-            // 获取按钮在包装器中的位置信息
+            // 获取按钮在视口中的绝对位置信息
             const rect = targetButton.getBoundingClientRect();
             
-            // 计算按钮中心点相对位置
-            const buttonX = rect.width / 2; 
-            const buttonY = rect.height / 2; 
+            // 计算按钮中心点的绝对位置（相对于视口）
+            const buttonX = rect.left + rect.width / 2;
+            const buttonY = rect.top + rect.height / 2;
             
-            // 触发表情包效果
-            showButtonEmojiEffect(buttonX, buttonY, wrapper);
+            // 触发表情包效果，使用全局容器
+            showButtonEmojiEffect(buttonX, buttonY, emojiContainer);
             console.log('触发表情动画');
         }
         
@@ -149,14 +166,15 @@ window.addEventListener('DOMContentLoaded', function() {
         function triggerLongPressEffect() {
             if (isLongPressing) {
                 const rect = targetButton.getBoundingClientRect();
-                const buttonX = rect.width / 2;
-                const buttonY = rect.height / 2;
+                // 计算按钮中心点的绝对位置（相对于视口）
+                const buttonX = rect.left + rect.width / 2;
+                const buttonY = rect.top + rect.height / 2;
                 
                 // 长按触发较少数量的表情包，避免过多
                 const emojiCount = Math.floor(Math.random() * 2) + 2; // 2-3个表情包
                 for (let i = 0; i < emojiCount; i++) {
                     setTimeout(function() {
-                        createSingleEmoji(buttonX, buttonY, wrapper);
+                        createSingleEmoji(buttonX, buttonY, emojiContainer);
                     }, i * 30);
                 }
             }
@@ -254,11 +272,12 @@ function createSingleEmoji(x, y, container) {
     const verticalOffset = Math.sin(angle) * distance; // 根据角度计算垂直偏移
     
     // 设置样式 - 绝对定位，从按钮中心开始
-    emoji.style.position = 'absolute';
-    emoji.style.left = '50%'; 
-    emoji.style.top = '50%';
+    emoji.style.position = 'fixed';
+    emoji.style.left = `${x}px`; 
+    emoji.style.top = `${y}px`;
     emoji.style.transform = 'translate(-50%, -50%) scale(0)';
     emoji.style.opacity = '0';
+    emoji.style.willChange = 'transform, opacity';
     emoji.style.pointerEvents = 'none';
     emoji.style.zIndex = '1000';
     emoji.style.imageRendering = 'pixelated';
