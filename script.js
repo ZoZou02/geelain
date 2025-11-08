@@ -292,18 +292,47 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 从API获取留言
+    // 从API获取留言 - 带频率限制和缓存
     function fetchMessagesFromApi() {
-        const { api } = COUNTER_CONFIG.messageSystem;
+        const { api, fetchLimit } = COUNTER_CONFIG.messageSystem;
         const { baseUrl, getAction } = api;
-        // 添加时间戳参数防止浏览器缓存
+        
+        // 检查是否启用了频率限制
+        if (fetchLimit && fetchLimit.enabled) {
+            try {
+                const now = Date.now();
+                const lastFetchTime = localStorage.getItem(fetchLimit.lastFetchKey);
+                const cachedData = localStorage.getItem(fetchLimit.cachedMessagesKey);
+                
+                // 检查是否在冷却时间内
+                if (lastFetchTime && (now - parseInt(lastFetchTime)) < fetchLimit.cooldownTime) {
+                    // 检查缓存是否存在且有效
+                    if (cachedData) {
+                        const cached = JSON.parse(cachedData);
+                        // 检查缓存是否过期
+                        if (cached.timestamp && (now - cached.timestamp) < fetchLimit.cacheExpiry) {
+                            console.log('使用缓存的留言数据');
+                            return Promise.resolve(cached.messages);
+                        }
+                    }
+                    console.log('在冷却时间内，使用缓存或空数据');
+                    // 如果没有有效缓存，返回空数组避免频繁请求
+                    return Promise.resolve([]);
+                }
+            } catch (error) {
+                console.warn('频率限制或缓存检查出错:', error);
+                // 出错时继续正常获取
+            }
+        }
+        
+        // 添加时间戳参数
         const timestamp = new Date().getTime();
         const apiUrl = `${baseUrl}/${getAction}?t=${timestamp}`;
         
-        // 添加缓存控制选项，确保每次都获取最新数据
+        // 发起请求
         return fetch(apiUrl, {
             method: 'GET',
-            cache: 'no-store', // 禁用缓存
+            cache: 'no-store',
             headers: {
                 'Cache-Control': 'no-cache, no-store, must-revalidate',
                 'Pragma': 'no-cache',
@@ -314,31 +343,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) {
                     throw new Error(`网络响应错误: ${response.status}`);
                 }
-                // 确保从响应中提取正确的数据结构
                 return response.json().then(data => {
-                    // 确认API返回格式为 { success: true, data: [...] }，其中每个item包含id、name、content和timestamp字段
+                    // 处理响应数据
+                    let filteredMessages = [];
+                    
                     if (data && data.success && Array.isArray(data.data)) {
-                        // 过滤并确保每个消息对象都包含必要的字段
-                        const filteredMessages = data.data.filter(message => 
+                        filteredMessages = data.data.filter(message => 
                             message && 
                             message.id && 
                             message.name && 
                             message.content && 
                             message.timestamp
                         );
-                        return filteredMessages;
                     } else if (Array.isArray(data)) {
-                        // 如果直接返回数组，也兼容处理
-                        const filteredMessages = data.filter(message => 
+                        filteredMessages = data.filter(message => 
                             message && 
                             message.id && 
                             message.name && 
                             message.content && 
                             message.timestamp
                         );
-                        return filteredMessages;
                     }
-                    return [];
+                    
+                    // 保存到缓存
+                    if (fetchLimit && fetchLimit.enabled) {
+                        try {
+                            const cacheData = {
+                                messages: filteredMessages,
+                                timestamp: Date.now()
+                            };
+                            localStorage.setItem(fetchLimit.cachedMessagesKey, JSON.stringify(cacheData));
+                            localStorage.setItem(fetchLimit.lastFetchKey, Date.now().toString());
+                        } catch (error) {
+                            console.warn('缓存保存失败:', error);
+                        }
+                    }
+                    
+                    return filteredMessages;
                 });
             })
             .catch(error => {

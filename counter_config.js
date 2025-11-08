@@ -118,7 +118,20 @@ const COUNTER_CONFIG = {
         // 弹幕动画时长（毫秒）
         baseDuration: 15000,
         minDuration: 10000,
-        maxDuration: 12000
+        maxDuration: 12000,
+        
+        // 获取留言频率限制配置
+        fetchLimit: {
+            enabled: true,
+            // 两次获取留言之间的最小间隔时间（毫秒）
+            cooldownTime: 60000, // 60秒
+            // localStorage中存储最后获取时间的键名
+            lastFetchKey: 'geebarLastMessagesFetched',
+            // localStorage中存储缓存留言的键名
+            cachedMessagesKey: 'geebarCachedMessages',
+            // 缓存有效期（毫秒）
+            cacheExpiry: 300000 // 5分钟
+        }
     }
 };
 
