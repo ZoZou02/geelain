@@ -388,7 +388,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
     
-    // 存储当前活跃的弹幕位置
+    // 存储当前活跃的弹幕信息，用于避障计算
     const activeMessages = [];
     
     // 弹幕配置参数 - 可根据需要调整这些值
@@ -424,32 +424,121 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 获取一个可用的轨道 - 使用随机方式避免过于规整
-    function getAvailableTrack(messageWidth, duration) {
+    // 获取一个可用的轨道，带避障逻辑、随机选择和密度控制
+    function getAvailableTrack(messageWidth, messageSpeed) {
         // 如果没有轨道，返回默认位置
         if (messageTracks.length === 0) {
-            return Math.floor(window.innerHeight / 2);
+            return { top: Math.floor(window.innerHeight / 2), delay: 0 };
         }
         
-        // 使用随机方式选择轨道，但避免连续使用同一条轨道
-        let availableTracks = messageTracks;
-        if (lastTrackIndex !== -1 && messageTracks.length > 1) {
-            // 排除上次使用的轨道，增加随机性
-            availableTracks = messageTracks.filter(track => track.index !== lastTrackIndex);
+        const screenWidth = window.innerWidth;
+        const { safetyCoefficient, maxDelay, densityControl } = COUNTER_CONFIG.messageSystem;
+        
+        // 应用密度乘数到安全系数
+        const adjustedSafetyCoefficient = safetyCoefficient / (densityControl?.enabled ? densityControl.densityMultiplier : 1.0);
+        
+        // 先检查是否有完全空闲的轨道
+        const emptyTracks = messageTracks.filter(track => {
+            const hasActiveMessages = activeMessages.some(msg => 
+                Math.abs(msg.top - track.top) < MESSAGE_HEIGHT / 2 && 
+                msg.speed && msg.width && msg.startTime
+            );
+            return !hasActiveMessages;
+        });
+        
+        // 如果有空闲轨道，优先从中随机选择
+        if (emptyTracks.length > 0) {
+            // 避免连续使用同一条轨道
+            let availableEmptyTracks = emptyTracks;
+            if (lastTrackIndex !== -1 && emptyTracks.length > 1) {
+                availableEmptyTracks = emptyTracks.filter(track => track.index !== lastTrackIndex);
+                if (availableEmptyTracks.length === 0) {
+                    availableEmptyTracks = emptyTracks;
+                }
+            }
+            
+            const randomIndex = Math.floor(Math.random() * availableEmptyTracks.length);
+            const selectedTrack = availableEmptyTracks[randomIndex];
+            lastTrackIndex = selectedTrack.index;
+            
+            // 空闲轨道延迟为0，直接显示弹幕
+            return { top: selectedTrack.top, delay: 0 };
         }
         
-        // 从可用轨道中随机选择一个
-        const randomIndex = Math.floor(Math.random() * availableTracks.length);
-        const selectedTrack = availableTracks[randomIndex];
+        // 如果没有空闲轨道，计算所有轨道的延迟时间
+        const trackDelays = messageTracks.map(track => {
+            // 找到该轨道上的最后一条弹幕
+            const trackMessages = activeMessages.filter(msg => 
+                Math.abs(msg.top - track.top) < MESSAGE_HEIGHT / 2 && 
+                msg.speed && msg.width && msg.startTime
+            );
+            
+            let delay = 0;
+            if (trackMessages.length > 0) {
+                // 按开始时间排序，取最后一条
+                trackMessages.sort((a, b) => b.startTime - a.startTime);
+                const lastMessage = trackMessages[0];
+                
+                // 计算安全间距 S = 前车速度 V_prev × K + 前车宽度 L_prev
+                const safetyDistance = lastMessage.speed * adjustedSafetyCoefficient + lastMessage.width;
+                
+                // 计算最后一条弹幕当前的位置
+                const elapsedTime = Date.now() - lastMessage.startTime;
+                const lastMessagePosition = screenWidth - (lastMessage.speed * elapsedTime);
+                
+                // 如果最后一条弹幕还在屏幕上，计算需要的延迟
+                if (lastMessagePosition > -lastMessage.width) {
+                    // 计算后车出发延迟 Delay = S / 当前弹幕速度 V_curr
+                    const requiredDelay = safetyDistance / messageSpeed;
+                    delay = Math.max(0, requiredDelay);
+                    
+                    // 应用最小间隔时间（如果启用了密度控制）
+                    if (densityControl?.enabled) {
+                        delay = Math.max(delay, densityControl.minIntervalBetweenMessages);
+                    }
+                }
+            }
+            
+            return { track, delay };
+        });
+        
+        // 首先检查是否有延迟小于等于maxDelay的轨道
+        let availableTracks = trackDelays.filter(item => item.delay <= maxDelay);
+        
+        // 如果没有可用轨道，使用所有轨道
+        if (availableTracks.length === 0) {
+            availableTracks = trackDelays;
+        }
+        
+        // 从可用轨道中随机选择一个，但避免连续使用同一条轨道
+        let randomTracks = availableTracks;
+        if (lastTrackIndex !== -1 && availableTracks.length > 1) {
+            randomTracks = availableTracks.filter(item => item.track.index !== lastTrackIndex);
+            // 如果过滤后没有轨道，再使用所有可用轨道
+            if (randomTracks.length === 0) {
+                randomTracks = availableTracks;
+            }
+        }
+        
+        // 随机选择一个轨道
+        const randomIndex = Math.floor(Math.random() * randomTracks.length);
+        const selectedTrackInfo = randomTracks[randomIndex];
         
         // 更新上次使用的轨道索引
-        lastTrackIndex = selectedTrack.index;
-        return selectedTrack.top;
+        lastTrackIndex = selectedTrackInfo.track.index;
+        
+        return { top: selectedTrackInfo.track.top, delay: selectedTrackInfo.delay };
     }
     
     // 随机显示单条留言
     function displayMessage(name, content) {
-        const { baseDuration, minDuration, maxDuration } = COUNTER_CONFIG.messageSystem;
+        const { screenStayTime, densityControl } = COUNTER_CONFIG.messageSystem;
+        
+        // 检查是否启用了密度控制，并且当前弹幕数量是否超过最大限制
+        if (densityControl?.enabled && activeMessages.length >= densityControl.maxConcurrentMessages) {
+            // 如果弹幕数量已达到上限，暂时不显示新弹幕
+            return false;
+        }
         
         // 创建消息元素
         const messageElement = document.createElement('div');
@@ -463,9 +552,13 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 强制计算以获取实际宽度
         const messageWidth = messageElement.offsetWidth;
+        const screenWidth = window.innerWidth;
         const scrollY = window.pageYOffset || document.documentElement.scrollTop;
         
-        let top;
+        // 计算弹幕速度：V = (屏幕宽度 W + 弹幕文本宽度 L) / 停留时间 T
+        const messageSpeed = (screenWidth + messageWidth) / screenStayTime; // 像素/毫秒
+        
+        let trackInfo;
         
         // 限制弹幕范围在选中的div区域内显示
         const targetDiv = document.querySelector('.image-section');
@@ -483,13 +576,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 initializeTracks(divHeight, divTop);
             }
             
-            // 估算动画时长，用于计算水平间距
-            const estimatedDuration = Math.max(COUNTER_CONFIG.messageSystem.minDuration, 
-                Math.min(COUNTER_CONFIG.messageSystem.maxDuration, 
-                COUNTER_CONFIG.messageSystem.baseDuration / (1 + Math.log10(messageWidth / 100))));
-                
-            // 获取可用轨道位置
-            top = getAvailableTrack(messageWidth, estimatedDuration);
+            // 获取可用轨道位置和延迟时间
+            trackInfo = getAvailableTrack(messageWidth, messageSpeed);
         } else {
             // 后备方案：使用视口范围和轨道系统
             const viewportHeight = window.innerHeight;
@@ -506,51 +594,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 initializeTracks(availableHeight, minTop);
             }
             
-            // 估算动画时长，用于计算水平间距
-            const estimatedDuration = Math.max(COUNTER_CONFIG.messageSystem.minDuration, 
-                Math.min(COUNTER_CONFIG.messageSystem.maxDuration, 
-                COUNTER_CONFIG.messageSystem.baseDuration / (1 + Math.log10(messageWidth / 100))));
-                
-            // 获取可用轨道位置
-            top = getAvailableTrack(messageWidth, estimatedDuration);
+            // 获取可用轨道位置和延迟时间
+            trackInfo = getAvailableTrack(messageWidth, messageSpeed);
         }
         
-        messageElement.style.top = `${top}px`;
+        messageElement.style.top = `${trackInfo.top}px`;
         
-        // 计算动画时间（根据弹幕长度）
-        // 让动画时间与长度成反比，越长越快
-        // 使用对数函数让速度变化更平滑，避免过长句子太快
-        // 修改计算逻辑，确保短弹幕也有足够的显示时间
-        const isMobile = window.innerWidth < 768;
-        const mobileMultiplier = isMobile ? 1000 : 1;
-        const adjustedMinDuration = minDuration / mobileMultiplier;
-        // 确保消息宽度至少为100px，防止短消息速度过快
-        const adjustedMessageWidth = Math.max(100, messageWidth);
-        const duration = Math.max(adjustedMinDuration, Math.min(maxDuration, baseDuration / (1 + Math.log10(adjustedMessageWidth / 100))));
+        // 计算动画时间（根据弹幕速度）
+        const totalScrollDistance = screenWidth + messageWidth;
+        const duration = totalScrollDistance / messageSpeed;
         
-        // 记录当前弹幕的位置和持续时间
+        // 记录当前弹幕的详细信息，用于避障计算
         const messageId = Date.now();
-        activeMessages.push({
+        const messageInfo = {
             id: messageId,
-            top: top,
+            top: trackInfo.top,
+            width: messageWidth,
+            speed: messageSpeed,
+            startTime: Date.now() + trackInfo.delay,
             element: messageElement
-        });
+        };
+        
+        // 根据密度乘数调整延迟时间
+        const adjustedDelay = densityControl?.enabled ? 
+            trackInfo.delay / densityControl.densityMultiplier : trackInfo.delay;
         
         // 显示并开始动画
         setTimeout(() => {
+            // 将弹幕添加到活跃列表
+            activeMessages.push(messageInfo);
+            
             messageElement.style.opacity = '1';
             // 添加轻微的透明度动画和滚动动画
             messageElement.style.transition = `transform ${duration}ms linear, opacity 0.5s ease-out`;
-            messageElement.style.transform = `translateX(-${window.innerWidth + messageWidth}px)`;
+            messageElement.style.transform = `translateX(-${totalScrollDistance}px)`;
             
             // 确保弹幕完全移动出屏幕后才消失
-            // 计算弹幕完全移出屏幕所需的额外时间
-            // 总滚动距离是屏幕宽度+弹幕宽度，需要确保弹幕完全移出屏幕
-            const totalScrollDistance = window.innerWidth + messageWidth;
-            const pixelsPerMillisecond = totalScrollDistance / duration;
-            // 当弹幕完全移出屏幕时需要额外的时间：弹幕宽度 / 速度
-            const extraTime = (messageWidth / pixelsPerMillisecond) * 0.8; // 乘以0.8稍微提前一点开始淡出效果
-            
             setTimeout(() => {
                 // 只有当弹幕完全移出屏幕后才开始淡出
                 messageElement.style.opacity = '0';
@@ -564,8 +643,24 @@ document.addEventListener('DOMContentLoaded', function() {
                         activeMessages.splice(index, 1);
                     }
                 }, 500); // 淡出动画持续时间
-            }, duration + extraTime);
-        }, 50);
+            }, duration);
+        }, adjustedDelay + 50);
+        
+        // 定期清理无效的弹幕元素引用（防止内存泄漏）
+        function cleanupDeadMessages() {
+            const now = Date.now();
+            for (let i = activeMessages.length - 1; i >= 0; i--) {
+                const msg = activeMessages[i];
+                if (!msg.element.parentNode) {
+                    activeMessages.splice(i, 1);
+                }
+            }
+        }
+        
+        // 每20条弹幕清理一次
+        if (activeMessages.length % 20 === 0) {
+            cleanupDeadMessages();
+        }
         
         // 定期清理无效的弹幕元素引用（防止内存泄漏）
         function cleanupDeadMessages() {
@@ -586,7 +681,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 随机显示已有留言的函数
     function startRandomMessageDisplay() {
-        const { minDisplayInterval, maxDisplayInterval } = COUNTER_CONFIG.messageSystem;
+        const { minDisplayInterval, maxDisplayInterval, densityControl } = COUNTER_CONFIG.messageSystem;
         
         // 只从API获取留言
         fetchMessagesFromApi()
@@ -597,9 +692,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
                 
-                // 定期随机显示留言，根据配置的间隔范围
-                const displayInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
+                // 计算基础显示间隔
+                let baseInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
+                // 根据密度乘数调整显示间隔：密度越高，间隔越短
+                const displayInterval = densityControl?.enabled ? 
+                    baseInterval / densityControl.densityMultiplier : baseInterval;
                 
+                // 检查是否有空闲轨道，如果有则立即显示一条弹幕
+                const hasEmptyTracks = messageTracks.some(track => {
+                    return !activeMessages.some(msg => 
+                        Math.abs(msg.top - track.top) < MESSAGE_HEIGHT / 2 && 
+                        msg.speed && msg.width && msg.startTime
+                    );
+                });
+                
+                // 如果有空闲轨道，立即显示一条弹幕
+                if (hasEmptyTracks) {
+                    // 随机选择一条留言
+                    const randomIndex = Math.floor(Math.random() * messages.length);
+                    const randomMessage = messages[randomIndex];
+                    if (randomMessage && randomMessage.name && randomMessage.content) {
+                        displayMessage(randomMessage.name, randomMessage.content);
+                    }
+                }
+                
+                // 即使立即显示了一条弹幕，仍按照间隔安排下一次检查
                 setTimeout(() => {
                     // 随机选择一条留言
                     const randomIndex = Math.floor(Math.random() * messages.length);

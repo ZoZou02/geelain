@@ -115,7 +115,18 @@ const COUNTER_CONFIG = {
         minDisplayInterval: 500,
         maxDisplayInterval: 1000,
         
-        // 弹幕动画时长（毫秒）
+        // 弹幕显示配置
+        screenStayTime: 9000, // 屏幕停留时间（毫秒）
+        safetyCoefficient: 0.4, // 安全系数（0.3~0.5）
+        maxDelay: 10, // 最大延迟时间，超过此值会切换轨道（毫秒）
+        // 弹幕密度控制
+        densityControl: {
+            enabled: true, // 是否启用密度控制
+            maxConcurrentMessages: 20, // 屏幕上同时显示的最大弹幕数量
+            minIntervalBetweenMessages: 10, // 同轨道弹幕之间的最小间隔（毫秒）
+            densityMultiplier: 1.0 // 密度乘数，范围0.5-2.0，越小密度越低，越大密度越高
+        },
+        // 保留原有配置以兼容现有逻辑
         baseDuration: 15000,
         minDuration: 10000,
         maxDuration: 12000,
