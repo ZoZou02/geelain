@@ -3,6 +3,28 @@
     src: local('Courier New'), local('MS Gothic');
 }
 
+/* 全局鼠标指针样式 */
+* {
+    cursor: url('assets/cursor/Geebar1.cur'), auto !important;
+}
+
+/* 可点击元素的鼠标指针样式 */
+a, button, input[type="submit"], input[type="button"], .submit-button,
+input[type="image"], input[type="reset"], select, label[for], [role="button"],
+[tabindex="0"]:not(input):not(textarea):not(select) {
+    cursor: url('assets/cursor/Geebar4.cur'), pointer !important;
+}
+
+/* 文字选择时的鼠标指针样式 */
+input, textarea, [contenteditable="true"], select {
+    cursor: url('assets/cursor/Geebar10.cur'), text !important;
+}
+
+/* 加载状态的鼠标指针样式 */
+.loading, *:disabled {
+    cursor: url('assets/cursor/Geebar2.cur'), wait !important;
+}
+
 body {
     font-family: 'Pixel', monospace;
     background-color: #000;
