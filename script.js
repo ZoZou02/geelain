@@ -1,6 +1,41 @@
 // 导入配置
 import COUNTER_CONFIG from './counter_config.js';
 
+// 当前网站版本号 - 与HTML中的脚本版本号同步
+const CURRENT_VERSION = '1.21.0';
+
+// 检查并处理版本更新
+function checkForUpdates() {
+    // 从localStorage获取存储的版本
+    const storedVersion = localStorage.getItem('siteVersion');
+    
+    // 如果localStorage中没有版本信息或者版本不匹配
+    if (!storedVersion || storedVersion !== CURRENT_VERSION) {
+        console.log('检测到网站更新，正在清除缓存...');
+        
+        // 清除localStorage中的版本信息
+        localStorage.removeItem('siteVersion');
+        
+        // 强制刷新页面以获取最新内容
+        // 使用reload(true)确保从服务器重新加载而不是从缓存
+        location.reload(true);
+    } else {
+        console.log('网站已是最新版本');
+    }
+    
+    // 更新localStorage中的版本信息
+    localStorage.setItem('siteVersion', CURRENT_VERSION);
+}
+
+// 添加一个额外的防缓存机制 - 在页面加载时检查
+window.addEventListener('pageshow', function(event) {
+    // 检查页面是否是从缓存加载的
+    if (event.persisted) {
+        console.log('页面从缓存加载，检查更新...');
+        checkForUpdates();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     // 添加干扰层
     const interference = document.createElement('div');
@@ -750,6 +785,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 页面加载时的效果
     window.addEventListener('load', () => {
+        // 先检查版本更新
+        checkForUpdates();
+        
         document.body.style.opacity = '0';
         setTimeout(() => {
             document.body.style.transition = 'opacity 0.5s ease';
