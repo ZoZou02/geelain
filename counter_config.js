@@ -13,7 +13,7 @@ const COUNTER_CONFIG = {
     // API 配置
     api: {
         // baseUrl: 'http://8.148.253.91/api/counter',
-        baseUrl: 'https://66ccf403.r37.cpolar.top/api/counter',
+        baseUrl: 'https://76f113e7.r37.cpolar.top/api/counter',
         getAction: 'get',
         incrementAction: 'increment',
         resetAction: 'reset'
@@ -95,7 +95,7 @@ const COUNTER_CONFIG = {
         // 留言API配置
         api: {
             // baseUrl: 'http://8.148.253.91/api/message',
-            baseUrl: 'https://66ccf403.r37.cpolar.top/api/message',
+            baseUrl: 'https://76f113e7.r37.cpolar.top/api/message',
             getAction: 'get',
             submitAction: 'submit'
         },
