@@ -1,6 +1,6 @@
 {
-  "name": "Geebar",
-  "short_name": "Geebar",
+  "name": "GeeLain",
+  "short_name": "GeeLain",
   "icons": [
     {
       "src": "apple-touch-icon.png",
@@ -33,5 +33,5 @@
   "orientation": "portrait",
   "scope": "/",
   "start_url": "/",
-  "description": "Geebar website"
+  "description": "GeeLain"
 }
