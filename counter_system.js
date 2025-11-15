@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch((error) => {
             console.error(`[API模式] 计数器API并行请求失败: ${error.message}`);
             console.error('[API模式] API请求失败，跳转到503页面');
-            window.location.href = '/geelain/g503.html';
+            // window.location.href = '/geelain/g503.html';
         });
     }
     
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.error(`[API模式] ${errorMsg}`);
         console.error('[API模式] API不可用，立即跳转到503页面');
         // 立即执行跳转，不等待后续操作
-        window.location.href = '/geelain/g503.html';
+        // window.location.href = '/geelain/g503.html';
         // 返回一个rejected的Promise，保持Promise链的一致性
         return Promise.reject(new Error(errorMsg));
     }
@@ -404,7 +404,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                         .catch(err => {
                                             console.error(`[API模式] 主计数器重置请求失败: ${err.message}`);
                                             console.error('[API模式] API请求失败，跳转到503页面');
-                                            window.location.href = '/geelain/g503.html';
+                                            // window.location.href = '/geelain/g503.html';
                                         });
                                 } else {
                                     // 未达到阈值，直接刷新
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     .catch(error => {
                     console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
                     console.error('[API模式] API请求失败，跳转到503页面');
-                    window.location.href = '/geelain/g503.html';
+                    // window.location.href = '/geelain/g503.html';
                 });
             }
             clickCount = 0;
@@ -500,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 console.error(`[API模式] 主计数更新请求失败: ${error.message}`);
                 console.error('[API模式] API请求失败，跳转到503页面');
-                window.location.href = '/geelain/g503.html';
+                // window.location.href = '/geelain/g503.html';
             });
     }
     
