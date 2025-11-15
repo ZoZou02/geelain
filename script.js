@@ -2,7 +2,7 @@
 import COUNTER_CONFIG from './counter_config.js';
 
 // 当前网站版本号 - 与HTML中的脚本版本号同步
-const CURRENT_VERSION = '1.23.0';
+const CURRENT_VERSION = '2.0.0';
 
 // 检查并处理版本更新
 function checkForUpdates() {
@@ -81,34 +81,106 @@ document.addEventListener('DOMContentLoaded', function() {
         timerElement.style.display = 'inline-block'; // 使元素保持为行内块元素
         
         const targetDate = new Date(2025, 7, 22, 15, 18, 0);
-        const targetTime = targetDate.getTime();
+          // 目标日期时间
+          const liveTime = new Date(2025, 10, 15, 16, 0, 0); // 恢复为目标日期
+          const targetTime = targetDate.getTime();
         
         // 更新计时器函数
         const updateTimer = () => {
             // 获取当前时间
             const nowTime = Date.now();
             
-            // 计算时间差（毫秒）
+            // 判断是否已到达或超过liveTime
+            if (nowTime >= liveTime.getTime()) {
+                // 获取计时器容器元素
+                const timerContainer = document.querySelector('.offline-timer');
+                if (timerContainer) {
+                    // 检查是否已经添加了图片，避免重复添加
+                    if (!timerContainer.querySelector('.return-image')) {
+                        // 创建a标签作为点击跳转的容器
+                        const returnLink = document.createElement('a');
+                        returnLink.href = 'http://8.148.253.91/files/index.html';
+                        
+                        // 设置为绝对定位，覆盖在时间上，使用vw单位调整大小
+                        returnLink.style.position = 'absolute';
+                        returnLink.style.top = '50%';
+                        returnLink.style.left = '50%';
+                        returnLink.style.transform = 'translate(-50%, -50%)';
+                        // 增大基础尺寸，特别是在移动设备上更明显
+                        returnLink.style.width = '30vw';
+                        returnLink.style.height = 'auto';
+                        returnLink.style.minWidth = '120px'; // 确保在小屏幕上也有最小宽度
+                        returnLink.style.maxWidth = '250px';
+                        returnLink.style.transition = 'transform 0.2s ease';
+                        returnLink.style.zIndex = '10'; // 确保在顶层
+                        
+                        // 添加悬停放大效果
+                        returnLink.addEventListener('mouseenter', function() {
+                            this.style.transform = 'translate(-50%, -50%) scale(1.05)';
+                        });
+                        
+                        returnLink.addEventListener('mouseleave', function() {
+                            this.style.transform = 'translate(-50%, -50%) scale(1)';
+                        });
+                        
+                        // 创建图片元素
+                        const returnImage = document.createElement('img');
+                        returnImage.src = 'assets/img/s-return.svg';
+                        returnImage.className = 'return-image';
+                        returnImage.style.width = '100%';
+                        returnImage.style.height = '100%';
+                        returnImage.style.objectFit = 'contain';
+                        
+                        // 将图片添加到链接中
+                        returnLink.appendChild(returnImage);
+                        
+                        // 设置容器为相对定位，以便图片能正确覆盖
+                        timerContainer.style.position = 'relative';
+                        
+                        // 添加到timerContainer，覆盖在时间上面
+                        timerContainer.appendChild(returnLink);
+                    }
+                }
+                return; // 不再更新计时器
+            }
+            
+            // 计算时间差（毫秒）正计时
             let diff = nowTime - targetTime;
+
+            // 计算时间差（毫秒）倒计时
+            let diffLive = liveTime - nowTime;
             
             // 确保时间差为正数（处理目标时间在未来的情况）
             if (diff < 0) diff = 0;
+            if (diffLive < 0) diffLive = 0;
             
             // 计算小时、分钟、秒
             const hours = Math.floor(diff / 3600000);
             const minutes = Math.floor((diff % 3600000) / 60000);
             const seconds = Math.floor((diff % 60000) / 1000);
             
+            // 计算倒计时小时、分钟、秒
+            const hoursLive = Math.floor(diffLive / 3600000);
+            const minutesLive = Math.floor((diffLive % 3600000) / 60000);
+            const secondsLive = Math.floor((diffLive % 60000) / 1000);
+
             // 格式化并更新显示 - 为分钟和秒添加前导零
             const formattedMinutes = String(minutes).padStart(2, '0');
             const formattedSeconds = String(seconds).padStart(2, '0');
+            const formattedMinutesLive = String(minutesLive).padStart(2, '0');
+            const formattedSecondsLive = String(secondsLive).padStart(2, '0');
             
             // 只有当值真正改变时才更新DOM，减少重绘和闪烁
             // 使用HTML来为"时"、"分"、"秒"汉字添加白色样式
             // 将小时和分秒部分分开，以便在手机版时能正确实现两行显示效果
             const newTimeHtml = '<span class="timer-hours">'+hours+'<span class="timer-unit">时</span></span><span class="timer-minutes-seconds">'+formattedMinutes+'<span class="timer-unit">分</span>'+formattedSeconds+'<span class="timer-unit">秒</span></span>';
-            if (timerElement.innerHTML !== newTimeHtml) {
-                timerElement.innerHTML = newTimeHtml;
+            const newTimeHtmlLive = '<span class="timer-hours">'+hoursLive+'<span class="timer-unit">时</span></span><span class="timer-minutes-seconds">'+formattedMinutesLive+'<span class="timer-unit">分</span>'+formattedSecondsLive+'<span class="timer-unit">秒</span></span>';
+            
+            // if (timerElement.innerHTML !== newTimeHtml) {
+            //     timerElement.innerHTML = newTimeHtml;
+            // }
+            if (timerElement.innerHTML !== newTimeHtmlLive) {
+                timerElement.innerHTML = newTimeHtmlLive;
             }
         };
         
