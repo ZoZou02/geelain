@@ -2,7 +2,7 @@
 import COUNTER_CONFIG from './counter_config.js';
 
 // 当前网站版本号 - 与HTML中的脚本版本号同步
-const CURRENT_VERSION = '3.0.0';
+const CURRENT_VERSION = '3.0.1';
 
 // 检查并处理版本更新
 function checkForUpdates() {

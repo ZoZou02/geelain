@@ -94,7 +94,7 @@ const COUNTER_CONFIG = {
     messageSystem: {
         // 留言API配置
         api: {
-            baseUrl: 'https://5c4312e2.r37.cpolar.top/api/message/',
+            baseUrl: 'https://5c4312e2.r37.cpolar.top/api/message',
             // baseUrl: 'https://4ee22add.r37.cpolar.top/api/message',
             getAction: 'get',
             submitAction: 'submit'
