@@ -1086,13 +1086,13 @@ p {
 
 /* 直播中状态 */
 .live-indicator.live {
-    background-color: #ff0000;
+    background-color: #fd2d5c;
     animation: pulse 1.5s infinite;
 }
 
 .live-status.live .live-status-text {
-    color: #ff0000;
-    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+    color: #fd2d5c;
+    text-shadow: 0 0 5px rgba(253, 45, 92, 0.5);
 }
 
 /* 未开播状态 */
@@ -1112,13 +1112,13 @@ p {
 /* 脉冲动画 */
 @keyframes pulse {
     0% {
-        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+        box-shadow: 0 0 0 0 rgba(253, 45, 92, 0.7);
     }
     70% {
-        box-shadow: 0 0 0 8px rgba(255, 0, 0, 0);
+        box-shadow: 0 0 0 8px rgba(253, 45, 92, 0);
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+        box-shadow: 0 0 0 0 rgba(253, 45, 92, 0);
     }
 }
 
