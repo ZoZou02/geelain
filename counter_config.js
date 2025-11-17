@@ -12,8 +12,7 @@ const COUNTER_CONFIG = {
 
     // API 配置
     api: {
-        baseUrl: 'https://5c4312e2.r37.cpolar.top/api/counter',
-        // baseUrl: 'https://4ee22add.r37.cpolar.top/api/counter',
+        baseUrl: 'https://vendora.fun/api/counter',
         getAction: 'get',
         incrementAction: 'increment',
         resetAction: 'reset'
@@ -94,8 +93,7 @@ const COUNTER_CONFIG = {
     messageSystem: {
         // 留言API配置
         api: {
-            baseUrl: 'https://5c4312e2.r37.cpolar.top/api/message',
-            // baseUrl: 'https://4ee22add.r37.cpolar.top/api/message',
+            baseUrl: 'https://vendora.fun/api/message',
             getAction: 'get',
             submitAction: 'submit'
         },

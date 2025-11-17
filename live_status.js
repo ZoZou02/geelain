@@ -2,7 +2,7 @@
 class LiveStatusManager {
     constructor() {
         this.statusElement = document.getElementById('live-status');
-        this.apiUrl = 'https://5c4312e2.r37.cpolar.top/api/live/status';
+        this.apiUrl = 'https://vendora.fun/api/live/status';
         this.updateInterval = 30000; // 30秒更新一次
     }
 
