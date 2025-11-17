@@ -2,7 +2,7 @@
 import COUNTER_CONFIG from './counter_config.js';
 
 // 当前网站版本号 - 与HTML中的脚本版本号同步
-const CURRENT_VERSION = '2.0.0';
+const CURRENT_VERSION = '3.0.0';
 
 // 检查并处理版本更新
 function checkForUpdates() {
@@ -399,17 +399,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 从API获取留言 - 带频率限制和缓存
-    function fetchMessagesFromApi() {
+    // 从API获取留言 - 带频率限制、缓存和分页支持
+    function fetchMessagesFromApi(page = 1, pageSize = PAGE_SIZE) {
         const { api, fetchLimit } = COUNTER_CONFIG.messageSystem;
         const { baseUrl, getAction } = api;
         
+        // 构建缓存键，包含分页信息
+        const cacheKey = page === 1 ? fetchLimit.cachedMessagesKey : `${fetchLimit.cachedMessagesKey}_page_${page}`;
+        
         // 检查是否启用了频率限制
-        if (fetchLimit && fetchLimit.enabled) {
+        if (fetchLimit && fetchLimit.enabled && page === 1) {
             try {
                 const now = Date.now();
                 const lastFetchTime = localStorage.getItem(fetchLimit.lastFetchKey);
-                const cachedData = localStorage.getItem(fetchLimit.cachedMessagesKey);
+                const cachedData = localStorage.getItem(cacheKey);
                 
                 // 检查是否在冷却时间内
                 if (lastFetchTime && (now - parseInt(lastFetchTime)) < fetchLimit.cooldownTime) {
@@ -419,12 +422,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         // 检查缓存是否过期
                         if (cached.timestamp && (now - cached.timestamp) < fetchLimit.cacheExpiry) {
                             console.log('使用缓存的留言数据');
-                            return Promise.resolve(cached.messages);
+                            return Promise.resolve(cached);
                         }
                     }
                     console.log('在冷却时间内，使用缓存或空数据');
-                    // 如果没有有效缓存，返回空数组避免频繁请求
-                    return Promise.resolve([]);
+                    // 如果没有有效缓存，返回空数据对象
+                    return Promise.resolve({ messages: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 });
                 }
             } catch (error) {
                 console.warn('频率限制或缓存检查出错:', error);
@@ -432,9 +435,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        // 添加时间戳参数
+        // 添加时间戳和分页参数
         const timestamp = new Date().getTime();
-        const apiUrl = `${baseUrl}/${getAction}?t=${timestamp}`;
+        const apiUrl = `${baseUrl}/${getAction}?t=${timestamp}&page=${page}&pageSize=${pageSize}`;
         
         // 发起请求
         return fetch(apiUrl, {
@@ -451,52 +454,67 @@ document.addEventListener('DOMContentLoaded', function() {
                     throw new Error(`网络响应错误: ${response.status}`);
                 }
                 return response.json().then(data => {
-                    // 处理响应数据
-                    let filteredMessages = [];
+                    // 处理新的响应格式
+                    let responseData = { messages: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 };
                     
-                    if (data && data.success && Array.isArray(data.data)) {
-                        filteredMessages = data.data.filter(message => 
+                    if (data && Array.isArray(data.messages)) {
+                        // 过滤有效消息
+                        const filteredMessages = data.messages.filter(message => 
                             message && 
                             message.id && 
                             message.name && 
                             message.content && 
                             message.timestamp
                         );
-                    } else if (Array.isArray(data)) {
-                        filteredMessages = data.filter(message => 
-                            message && 
-                            message.id && 
-                            message.name && 
-                            message.content && 
-                            message.timestamp
-                        );
+                        
+                        responseData = {
+                            messages: filteredMessages,
+                            total: data.total || 0,
+                            page: data.page || page,
+                            pageSize: data.pageSize || pageSize,
+                            totalPages: data.totalPages || 0
+                        };
                     }
                     
                     // 保存到缓存
                     if (fetchLimit && fetchLimit.enabled) {
                         try {
                             const cacheData = {
-                                messages: filteredMessages,
+                                ...responseData,
                                 timestamp: Date.now()
                             };
-                            localStorage.setItem(fetchLimit.cachedMessagesKey, JSON.stringify(cacheData));
-                            localStorage.setItem(fetchLimit.lastFetchKey, Date.now().toString());
+                            localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+                            
+                            // 只更新首页的最后获取时间
+                            if (page === 1) {
+                                localStorage.setItem(fetchLimit.lastFetchKey, Date.now().toString());
+                            }
                         } catch (error) {
                             console.warn('缓存保存失败:', error);
                         }
                     }
                     
-                    return filteredMessages;
+                    return responseData;
                 });
             })
             .catch(error => {
                 console.error('获取留言失败:', error);
-                return [];
+                return { messages: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 };
             });
     }
     
     // 存储当前活跃的弹幕信息，用于避障计算
     const activeMessages = [];
+    
+    // 分页相关全局变量
+    let currentPage = 1;
+    let totalPages = 1;
+    let currentMessages = [];
+    let isLoadingNextPage = false;
+    // 使用配置中的预加载阈值，如果未配置则使用默认值
+    const { pagination } = COUNTER_CONFIG.messageSystem;
+    const PAGE_SIZE = pagination?.defaultPageSize || 20;
+    const PRELOAD_THRESHOLD = pagination?.preloadThreshold || 5;
     
     // 弹幕配置参数 - 可根据需要调整这些值
     const MESSAGE_HEIGHT = 30; // 估计的弹幕高度
@@ -786,62 +804,127 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // 预加载下一页数据
+    function preloadNextPage() {
+        // 如果未启用分页或者已经是最后一页，不执行预加载
+        if (!pagination?.enabled || isLoadingNextPage || currentPage >= totalPages) {
+            return;
+        }
+        
+        isLoadingNextPage = true;
+        const nextPage = currentPage + 1;
+        
+        fetchMessagesFromApi(nextPage, PAGE_SIZE)
+            .then(nextData => {
+                if (nextData && nextData.messages && nextData.messages.length > 0) {
+                    // 将下一页数据添加到当前消息队列
+                    currentMessages = [...currentMessages, ...nextData.messages];
+                    currentPage = nextPage;
+                    totalPages = nextData.totalPages || totalPages;
+                }
+                isLoadingNextPage = false;
+            })
+            .catch(error => {
+                console.error('预加载下一页失败:', error);
+                isLoadingNextPage = false;
+            });
+    }
+    
     // 随机显示已有留言的函数
     function startRandomMessageDisplay() {
         const { minDisplayInterval, maxDisplayInterval, densityControl } = COUNTER_CONFIG.messageSystem;
         
-        // 只从API获取留言
-        fetchMessagesFromApi()
-            .then(messages => {
-                // 如果没有留言，等待一段时间后重试
-                if (!messages || messages.length === 0) {
-                    setTimeout(startRandomMessageDisplay, 5000);
-                    return;
-                }
-                
-                // 计算基础显示间隔
-                let baseInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
-                // 根据密度乘数调整显示间隔：密度越高，间隔越短
-                const displayInterval = densityControl?.enabled ? 
-                    baseInterval / densityControl.densityMultiplier : baseInterval;
-                
-                // 检查是否有空闲轨道，如果有则立即显示一条弹幕
-                const hasEmptyTracks = messageTracks.some(track => {
-                    return !activeMessages.some(msg => 
-                        Math.abs(msg.top - track.top) < MESSAGE_HEIGHT / 2 && 
-                        msg.speed && msg.width && msg.startTime
-                    );
-                });
-                
-                // 如果有空闲轨道，立即显示一条弹幕
-                if (hasEmptyTracks) {
-                    // 随机选择一条留言
-                    const randomIndex = Math.floor(Math.random() * messages.length);
-                    const randomMessage = messages[randomIndex];
-                    if (randomMessage && randomMessage.name && randomMessage.content) {
-                        displayMessage(randomMessage.name, randomMessage.content);
-                    }
-                }
-                
-                // 即使立即显示了一条弹幕，仍按照间隔安排下一次检查
-                setTimeout(() => {
-                    // 随机选择一条留言
-                    const randomIndex = Math.floor(Math.random() * messages.length);
-                    const randomMessage = messages[randomIndex];
-                    if (randomMessage && randomMessage.name && randomMessage.content) {
-                        displayMessage(randomMessage.name, randomMessage.content);
+        // 如果当前没有消息或者消息即将用完，获取新数据
+        if (currentMessages.length === 0) {
+            // 从API获取留言（第一页）
+            fetchMessagesFromApi(1, PAGE_SIZE)
+                .then(data => {
+                    if (data && data.messages) {
+                        currentMessages = data.messages;
+                        currentPage = data.page || 1;
+                        totalPages = data.totalPages || 1;
                     }
                     
-                    // 非递归方式：通过setTimeout创建新的任务来获取最新留言列表
-                    setTimeout(startRandomMessageDisplay, displayInterval);
-                }, displayInterval);
-            })
-            .catch(error => {
-                console.error('获取留言失败:', error);
-                // 出错后等待一段时间重试
-                setTimeout(startRandomMessageDisplay, 5000);
+                    // 如果获取到消息，开始显示流程
+                    if (currentMessages.length > 0) {
+                        displayNextMessage();
+                    } else {
+                        // 如果没有留言，等待一段时间后重试
+                        setTimeout(startRandomMessageDisplay, 5000);
+                    }
+                })
+                .catch(error => {
+                    console.error('获取留言失败:', error);
+                    // 出错后等待一段时间重试
+                    setTimeout(startRandomMessageDisplay, 5000);
+                });
+        } else {
+            // 直接显示下一条消息
+            displayNextMessage();
+        }
+        
+        // 显示下一条消息的函数
+        function displayNextMessage() {
+            // 计算基础显示间隔
+            let baseInterval = Math.random() * (maxDisplayInterval - minDisplayInterval) + minDisplayInterval;
+            // 根据密度乘数调整显示间隔：密度越高，间隔越短
+            const displayInterval = densityControl?.enabled ? 
+                baseInterval / densityControl.densityMultiplier : baseInterval;
+            
+            // 检查是否有空闲轨道，如果有则立即显示一条弹幕
+            const hasEmptyTracks = messageTracks.some(track => {
+                return !activeMessages.some(msg => 
+                    Math.abs(msg.top - track.top) < MESSAGE_HEIGHT / 2 && 
+                    msg.speed && msg.width && msg.startTime
+                );
             });
+            
+            // 如果有空闲轨道，立即显示一条弹幕
+            if (hasEmptyTracks && currentMessages.length > 0) {
+                // 从队列中取出一条留言（可以随机或顺序）
+                const messageIndex = Math.floor(Math.random() * currentMessages.length);
+                const message = currentMessages[messageIndex];
+                
+                // 显示消息
+                if (message && message.name && message.content) {
+                    displayMessage(message.name, message.content);
+                    
+                    // 从队列中移除已显示的消息
+                    currentMessages.splice(messageIndex, 1);
+                    
+                    // 检查是否需要预加载下一页
+                    if (pagination?.enabled && currentMessages.length <= PRELOAD_THRESHOLD && !isLoadingNextPage) {
+                        preloadNextPage();
+                    }
+                }
+            }
+            
+            // 安排下一次显示
+            setTimeout(() => {
+                // 如果还有消息，显示下一条
+                if (currentMessages.length > 0) {
+                    const messageIndex = Math.floor(Math.random() * currentMessages.length);
+                    const message = currentMessages[messageIndex];
+                    
+                    if (message && message.name && message.content) {
+                        displayMessage(message.name, message.content);
+                        
+                        // 从队列中移除已显示的消息
+                        currentMessages.splice(messageIndex, 1);
+                        
+                        // 检查是否需要预加载下一页
+                        if (currentMessages.length <= PRELOAD_THRESHOLD && !isLoadingNextPage) {
+                            preloadNextPage();
+                        }
+                    }
+                }
+                
+                // 继续显示循环
+                setTimeout(startRandomMessageDisplay, displayInterval);
+            }, displayInterval);
+        }
     }
+    
     
     // HTML转义函数
     function escapeHtml(text) {

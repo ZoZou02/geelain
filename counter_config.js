@@ -12,7 +12,8 @@ const COUNTER_CONFIG = {
 
     // API 配置
     api: {
-        baseUrl: 'https://4ee22add.r37.cpolar.top/api/counter',
+        baseUrl: 'https://5c4312e2.r37.cpolar.top/api/counter',
+        // baseUrl: 'https://4ee22add.r37.cpolar.top/api/counter',
         getAction: 'get',
         incrementAction: 'increment',
         resetAction: 'reset'
@@ -93,7 +94,8 @@ const COUNTER_CONFIG = {
     messageSystem: {
         // 留言API配置
         api: {
-            baseUrl: 'https://4ee22add.r37.cpolar.top/api/message',
+            baseUrl: 'https://5c4312e2.r37.cpolar.top/api/message/',
+            // baseUrl: 'https://4ee22add.r37.cpolar.top/api/message',
             getAction: 'get',
             submitAction: 'submit'
         },
@@ -121,6 +123,12 @@ const COUNTER_CONFIG = {
             maxConcurrentMessages: 20, // 屏幕上同时显示的最大弹幕数量
             minIntervalBetweenMessages: 10, // 同轨道弹幕之间的最小间隔（毫秒）
             densityMultiplier: 1.0 // 密度乘数，范围0.5-2.0，越小密度越低，越大密度越高
+        },
+        // 分页配置
+        pagination: {
+            enabled: true, // 是否启用分页
+            defaultPageSize: 20, // 默认每页消息数量
+            preloadThreshold: 5 // 剩余消息数量少于此值时预加载下一页
         },
         // 保留原有配置以兼容现有逻辑
         baseDuration: 15000,
