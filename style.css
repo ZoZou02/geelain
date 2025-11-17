@@ -1055,6 +1055,82 @@ p {
     }
 }
 
+/* 直播状态样式 */
+.title-section {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.live-status {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    font-family: 'Pixel', monospace;
+    font-size: 0.9rem;
+    z-index: 10;
+}
+
+/* 直播状态指示器 */
+.live-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* 直播中状态 */
+.live-indicator.live {
+    background-color: #ff0000;
+    animation: pulse 1.5s infinite;
+}
+
+.live-status.live .live-status-text {
+    color: #ff0000;
+    text-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+}
+
+/* 未开播状态 */
+.live-indicator.offline {
+    background-color: #666;
+}
+
+.live-status.offline .live-status-text {
+    color: #999;
+}
+
+/* 错误状态 */
+.live-status.error .live-status-text {
+    color: #ff9900;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(255, 0, 0, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .live-status {
+        /* Keep absolute positioning for all screen sizes */
+        font-size: 0.8rem;
+        padding: 4px 8px;
+    }
+}
+
 /* 平板竖屏和大屏手机 (576px-767px) */
 @media (min-width: 576px) and (max-width: 767px) {
     .container {
