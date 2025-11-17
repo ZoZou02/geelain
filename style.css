@@ -1128,6 +1128,8 @@ p {
         /* Keep absolute positioning for all screen sizes */
         font-size: 0.8rem;
         padding: 4px 8px;
+        right: -13px;
+        top: -13px;
     }
 }
 
