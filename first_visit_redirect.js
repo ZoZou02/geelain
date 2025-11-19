@@ -19,8 +19,8 @@ const checkFirstVisit = () => {
 };
 
 // 当页面加载完成后执行检测
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', checkFirstVisit);
-} else {
-    checkFirstVisit();
-}
+// if (document.readyState === 'loading') {
+//     document.addEventListener('DOMContentLoaded', checkFirstVisit);
+// } else {
+//     checkFirstVisit();
+// }
