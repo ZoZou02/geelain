@@ -4,10 +4,7 @@ class LiveStatusManager {
         this.statusElement = document.getElementById('live-status');
         this.apiUrl = 'https://vendora.fun/api/live/status';
         this.updateInterval = 30000; // 30秒更新一次
-        // 定义文本阴影样式，与页面头部保持一致
         this.textShadowStyle = '0 0 8px #fd2d5c, 0 0 15px #fd2d5c, 2px 0 0 rgba(255, 0, 0, 0.9), -2px 0 0 rgba(0, 255, 255, 0.9), 0 2px 0 rgba(255, 0, 0, 0.7), 0 -2px 0 rgba(0, 255, 255, 0.7)';
-        
-        // 添加脉冲动画样式
         this.addPulseAnimation();
     }
 
