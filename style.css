@@ -82,9 +82,9 @@ body::after {
     height: 100%;
     background: repeating-linear-gradient(0deg,
             transparent 0px,
-            rgba(253, 45, 92, 0.3) 1px,
-            transparent 2px);
-    background-size: 100% 1px;
+            rgba(253, 45, 92, 0.3) 2px,
+            transparent 4px);
+    background-size: 100% 2px;
     background-position: 0 0;
     pointer-events: none;
     z-index: 99;
@@ -101,14 +101,14 @@ body::before {
     background: repeating-linear-gradient(0deg,
             transparent 0px,
             rgba(0, 225, 255, 0.5) 1px,
-            transparent 2px);
-    background-size: 100% 3px;
+            transparent 3px);
+    background-size: 100% 5px;
     background-repeat: repeat-y;
     background-attachment: fixed;
     opacity: 0.7;
     pointer-events: none;
     z-index: 98;
-    animation: blueShift 24s linear infinite;
+    animation: blueShift 12s linear infinite;
 }
 
 /* 红移线效果 */
@@ -121,14 +121,14 @@ body::before {
     background: repeating-linear-gradient(0deg,
             transparent 0px,
             rgba(255, 0, 60, 0.5) 1px,
-            transparent 2px);
-    background-size: 100% 3px;
+            transparent 3px);
+    background-size: 100% 5px;
     background-repeat: repeat-y;
     background-attachment: fixed;
-    opacity: 0.6;
+    opacity: 0.7;
     pointer-events: none;
     z-index: 97;
-    animation: redShift 100s linear infinite;
+    animation: redShift 50s linear infinite;
 }
 
 @keyframes blueShift {
