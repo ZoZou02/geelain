@@ -705,26 +705,28 @@ p {
 
 /* 搜索链接样式 */
 .search-link {
-    font-family: 'Pixel', monospace;
-    font-size: 1.8rem;
-    color: #fd2d5c;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    text-shadow: none;
     margin: 0;
-    padding: 10px 20px;
+    padding: 12px;
     border: 2px solid #fd2d5c;
     background-color: #000000;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
 }
 
+/* 搜索图标样式 */
+.search-link svg {
+    transition: all 0.3s ease;
+}
+
+/* 悬停效果 */
 a:hover .search-link {
-    color: #ffffff;
-    text-shadow: none;
-    background-color: #000000;
     transform: scale(1.05);
-    box-shadow: none;
+}
+
+a:hover .search-link svg {
+    stroke: #ffffff;
 }
 
 /* 响应式设计 - 不同屏幕尺寸的样式调整 */
@@ -732,18 +734,24 @@ a:hover .search-link {
 /* 中等屏幕 - 平板和大屏幕手机 (768px-991px) */
 @media (max-width: 991px) {
     .search-link {
-        font-size: 1.5rem;
-        padding: 8px 16px;
-        letter-spacing: 2px;
+        padding: 10px;
+    }
+    
+    .search-link svg {
+        width: 28px;
+        height: 28px;
     }
 }
 
 /* 小屏幕 - 标准手机 (576px-767px) */
 @media (max-width: 767px) {
     .search-link {
-        font-size: 1.3rem;
-        padding: 8px 14px;
-        letter-spacing: 2px;
+        padding: 8px;
+    }
+    
+    .search-link svg {
+        width: 24px;
+        height: 24px;
     }
     
     .search-link-container {
@@ -755,9 +763,12 @@ a:hover .search-link {
 /* 超小屏幕 - 小屏手机 (320px-575px) */
 @media (max-width: 575px) {
     .search-link {
-        font-size: 1.1rem;
-        padding: 6px 12px;
-        letter-spacing: 1px;
+        padding: 6px;
+    }
+    
+    .search-link svg {
+        width: 20px;
+        height: 20px;
     }
     
     .search-link-container {
