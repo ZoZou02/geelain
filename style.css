@@ -694,6 +694,78 @@ p {
     margin: 10px 0 0 0;
 }
 
+/* 搜索链接容器样式 - 固定在右下角 */
+.search-link-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    text-decoration: none;
+}
+
+/* 搜索链接样式 */
+.search-link {
+    font-family: 'Pixel', monospace;
+    font-size: 1.8rem;
+    color: #fd2d5c;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    text-shadow: none;
+    margin: 0;
+    padding: 10px 20px;
+    border: 2px solid #fd2d5c;
+    background-color: #000000;
+    display: inline-block;
+    transition: all 0.3s ease;
+}
+
+a:hover .search-link {
+    color: #ffffff;
+    text-shadow: none;
+    background-color: #000000;
+    transform: scale(1.05);
+    box-shadow: none;
+}
+
+/* 响应式设计 - 不同屏幕尺寸的样式调整 */
+
+/* 中等屏幕 - 平板和大屏幕手机 (768px-991px) */
+@media (max-width: 991px) {
+    .search-link {
+        font-size: 1.5rem;
+        padding: 8px 16px;
+        letter-spacing: 2px;
+    }
+}
+
+/* 小屏幕 - 标准手机 (576px-767px) */
+@media (max-width: 767px) {
+    .search-link {
+        font-size: 1.3rem;
+        padding: 8px 14px;
+        letter-spacing: 2px;
+    }
+    
+    .search-link-container {
+        bottom: 15px;
+        right: 15px;
+    }
+}
+
+/* 超小屏幕 - 小屏手机 (320px-575px) */
+@media (max-width: 575px) {
+    .search-link {
+        font-size: 1.1rem;
+        padding: 6px 12px;
+        letter-spacing: 1px;
+    }
+    
+    .search-link-container {
+        bottom: 10px;
+        right: 10px;
+    }
+}
+
 /* 图片部分样式 */
 .image-section {
     display: flex;
