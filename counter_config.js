@@ -12,7 +12,7 @@ const COUNTER_CONFIG = {
 
     // API 配置
     api: {
-        baseUrl: 'https://vendora.fun/api/counter',
+        baseUrl: 'https://apizozou.top/api/counter',
         getAction: 'get',
         incrementAction: 'increment',
         resetAction: 'reset'
@@ -93,7 +93,7 @@ const COUNTER_CONFIG = {
     messageSystem: {
         // 留言API配置
         api: {
-            baseUrl: 'https://vendora.fun/api/message',
+            baseUrl: 'https://apizozou.top/api/message',
             getAction: 'get',
             submitAction: 'submit'
         },
