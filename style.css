@@ -694,18 +694,78 @@ p {
     margin: 10px 0 0 0;
 }
 
-/* 搜索链接容器样式 - 固定在右下角 */
-.search-link-container {
+/* 右下角按钮容器 */
+.bottom-buttons {
     position: fixed;
     bottom: 20px;
     right: 20px;
     z-index: 1000;
-    text-decoration: none;
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
 }
 
-/* 搜索链接样式 */
-.search-link {
+
+
+/* 打赏容器 */
+.donate-container {
+    display: flex;
+    align-items: flex-end;
+}
+
+/* 打赏展开面板 */
+.donate-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-right: 10px;
+    overflow: hidden;
+    width: auto;
+    opacity: 0;
+    transition: all 0.3s ease;
+    background-color: rgba(0, 0, 0, 0.95);
+    border: 2px solid #fd2d5c;
+    padding: 10px;
+}
+
+.donate-container.active .donate-panel {
+    width: auto;
+    opacity: 1;
+}
+
+/* 打赏标题 */
+.donate-title {
+    color: #fd2d5c;
+    font-family: 'Pixel', monospace;
+    font-size: 0.8rem;
     margin: 0;
+    text-align: center;
+}
+
+/* 付款码容器 */
+.payment-codes {
+    display: flex;
+    gap: 10px;
+}
+
+/* 付款码样式 */
+.payment-codes img {
+    width: 100px;
+    height: 100px;
+    background-color: #000000;
+    transition: transform 0.3s ease;
+}
+
+.payment-codes img.wechat {
+    border: 3px solid #09bb07;
+}
+
+.payment-codes img.alipay {
+    border: 3px solid #1677ff;
+}
+
+/* 底部按钮基础样式 */
+.bottom-button {
     padding: 12px;
     border: 2px solid #fd2d5c;
     background-color: #000000;
@@ -713,31 +773,40 @@ p {
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
+    cursor: pointer;
+    outline: none;
+    flex-shrink: 0;
+    text-decoration: none;
 }
 
-/* 搜索图标样式 */
-.search-link svg {
-    transition: all 0.3s ease;
-}
-
-/* 悬停效果 */
-a:hover .search-link {
+.bottom-button:hover {
     transform: scale(1.05);
 }
 
-a:hover .search-link svg {
+.bottom-button:hover svg {
+    fill: #ffffff;
     stroke: #ffffff;
+}
+
+/* 打赏按钮 */
+.donate-button {
+    /* 继承基础样式 */
+}
+
+/* 搜索按钮 */
+.search-button {
+    /* 继承基础样式 */
 }
 
 /* 响应式设计 - 不同屏幕尺寸的样式调整 */
 
 /* 中等屏幕 - 平板和大屏幕手机 (768px-991px) */
 @media (max-width: 991px) {
-    .search-link {
+    .bottom-button {
         padding: 10px;
     }
     
-    .search-link svg {
+    .bottom-button svg {
         width: 28px;
         height: 28px;
     }
@@ -745,37 +814,64 @@ a:hover .search-link svg {
 
 /* 小屏幕 - 标准手机 (576px-767px) */
 @media (max-width: 767px) {
-    .search-link {
+    .bottom-button {
         padding: 8px;
     }
     
-    .search-link svg {
+    .bottom-button svg {
         width: 24px;
         height: 24px;
-    }
-    
-    .search-link-container {
-        bottom: 15px;
-        right: 15px;
     }
 }
 
 /* 超小屏幕 - 小屏手机 (320px-575px) */
 @media (max-width: 575px) {
-    .search-link {
+    .bottom-buttons {
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    .bottom-button {
         padding: 6px;
     }
     
-    .search-link svg {
+    .bottom-button svg {
         width: 20px;
         height: 20px;
     }
     
-    .search-link-container {
-        bottom: 10px;
-        right: 10px;
+    .payment-codes img {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .donate-title {
+        font-size: 1rem;
     }
 }
+
+/* 小屏幕 - 标准手机 (576px-767px) */
+@media (max-width: 767px) {
+    .bottom-buttons {
+        bottom: 15px;
+        right: 15px;
+    }
+    
+    .bottom-button {
+        padding: 8px;
+    }
+    
+    .bottom-button svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .payment-codes img {
+        width: 56px;
+        height: 56px;
+    }
+}
+
 
 /* 图片部分样式 */
 .image-section {

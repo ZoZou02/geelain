@@ -37,6 +37,24 @@ window.addEventListener('pageshow', function(event) {
 });
 
 document.addEventListener('DOMContentLoaded', function() {
+    // 打赏功能
+    const donateContainer = document.getElementById('donate-container');
+    const donateButton = document.getElementById('donate-button');
+    
+    if (donateContainer && donateButton) {
+        donateButton.addEventListener('click', function(e) {
+            e.preventDefault(); // 阻止a标签的默认行为
+            e.stopPropagation();
+            donateContainer.classList.toggle('active');
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (!donateContainer.contains(e.target)) {
+                donateContainer.classList.remove('active');
+            }
+        });
+    }
+    
     // 添加干扰层
     const interference = document.createElement('div');
     interference.className = 'interference';

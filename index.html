@@ -121,19 +121,35 @@
 
     <script src="first_visit_redirect.js?v=1.0.0"></script>
     <script src="live_status.js?v=4.0.0"></script>
-    <script type="module" src="script.js?v=3.1.0"></script>
+    <script type="module" src="script.js?v=3.2.0"></script>
     <script type="module" src="button_emoji_effect.js?v=1.9.7"></script>
     <script type="module" src="counter_system.js?v=4.0.0"></script>
     
-    <!-- G搜链接 - 固定在右下角 -->
-    <a href="https://www.zozou.top/geesearch" target="_blank" class="search-link-container">
-        <div class="search-link">
+    <!-- 右下角按钮容器 -->
+    <div class="bottom-buttons">
+        <!-- 打赏按钮和展开面板 -->
+        <div id="donate-container" class="donate-container">
+            <div id="donate-panel" class="donate-panel">
+                <p class="donate-title">请我吃个TACO🌯</p>
+                <div class="payment-codes">
+                    <img src="assets/img/wx.jpg" alt="微信支付" class="wechat">
+                    <img src="assets/img/zfb.jpg" alt="支付宝" class="alipay">
+                </div>
+            </div>
+            <a href="#" class="bottom-button donate-button" id="donate-button">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#fd2d5c"/>
+                </svg>
+            </a>
+        </div>
+        <!-- G搜链接 -->
+        <a href="https://www.zozou.top/geesearch" target="_blank" class="bottom-button search-button">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="11" cy="11" r="8" stroke="#fd2d5c" stroke-width="2"/>
                 <path d="M21 21L16.65 16.65" stroke="#fd2d5c" stroke-width="2" stroke-linecap="round"/>
             </svg>
-        </div>
-    </a>
+        </a>
+    </div>
 </body>
 
 </html>
