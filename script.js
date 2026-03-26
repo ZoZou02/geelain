@@ -218,6 +218,106 @@ document.addEventListener('DOMContentLoaded', function() {
         
     });
     
+    // 输入过滤函数 - 防止各种注入攻击
+    function sanitizeInput(input) {
+        if (!input) return '';
+        
+        // 防止SQL注入 - 转义特殊字符
+        let sanitized = input
+            .replace(/'/g, "''")
+            .replace(/"/g, '"')
+            .replace(/\\/g, '\\\\')
+            .replace(/\//g, '\\/')
+            .replace(/\*/g, '\\*')
+            .replace(/;/g, '\\;')
+            .replace(/\-/g, '\\-')
+            .replace(/\+/g, '\\+')
+            .replace(/=/g, '\\=')
+            .replace(/\(/g, '\\(')
+            .replace(/\)/g, '\\)')
+            .replace(/\[|\]/g, '');
+        
+        // 防止CSS注入 - 过滤样式相关内容
+        sanitized = sanitized
+            .replace(/<style[\s\S]*?<\/style>/gi, '')
+            .replace(/style=["']?[^"']*["']?/gi, '')
+            .replace(/on\w+=["']?[^"']*["']?/gi, '');
+        
+        // 防止XML注入 - 过滤XML标签
+        sanitized = sanitized
+            .replace(/<[^>]+>/g, '')
+            .replace(/&[^;]+;/g, '');
+        
+        // 防止XSS - 转义HTML特殊字符
+        sanitized = sanitized
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        
+        return sanitized;
+    }
+    
+    // 输入验证函数
+    function validateInput(name, content) {
+        const errors = [];
+        
+        // 验证昵称
+        if (!name || name.trim() === '') {
+            errors.push('昵称不能为空');
+        } else if (name.length > COUNTER_CONFIG.messageSystem.maxNameLength) {
+            errors.push(`昵称不能超过${COUNTER_CONFIG.messageSystem.maxNameLength}个字符`);
+        } else if (!/^[a-zA-Z0-9\u4e00-\u9fa5_\-]+$/.test(name)) {
+            errors.push('昵称只能包含字母、数字、中文、下划线和连字符');
+        }
+        
+        // 验证内容
+        if (!content || content.trim() === '') {
+            errors.push('留言内容不能为空');
+        } else if (content.length > COUNTER_CONFIG.messageSystem.maxLength) {
+            errors.push(`留言内容不能超过${COUNTER_CONFIG.messageSystem.maxLength}个字符`);
+        }
+        
+        return errors;
+    }
+    
+    // 显示错误信息气泡
+    function showErrorBubble(message) {
+        // 移除之前的错误气泡
+        const existingBubble = document.querySelector('.error-bubble');
+        if (existingBubble) {
+            existingBubble.parentNode.removeChild(existingBubble);
+        }
+        
+        // 创建新的错误气泡
+        const bubble = document.createElement('div');
+        bubble.className = 'error-bubble';
+        bubble.textContent = message;
+        
+        // 将气泡添加到表单容器中，使其相对于输入框定位
+        const formContainer = document.querySelector('.message-form') || document.querySelector('.message-section');
+        if (formContainer) {
+            formContainer.appendChild(bubble);
+        } else {
+            // 如果找不到表单容器，就添加到 body
+            document.body.appendChild(bubble);
+            bubble.style.position = 'fixed';
+            bubble.style.top = '20px';
+            bubble.style.right = '20px';
+            bubble.style.transform = 'none';
+            bubble.style.left = 'auto';
+            bubble.style.bottom = 'auto';
+        }
+        
+        // 3 秒后自动移除
+        setTimeout(() => {
+            if (bubble.parentNode) {
+                bubble.parentNode.removeChild(bubble);
+            }
+        }, 3000);
+    }
+    
     // 留言功能实现
     function initMessageSystem() {
         const nameInput = document.getElementById('message-name');
@@ -300,29 +400,36 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.addEventListener('click', function() {
                 const name = nameInput.value.trim();
                 const content = contentTextarea.value.trim();
-                let isValid = true;
                 
-                // 验证输入并标红错误字段
-                if (!name) {
-                    addErrorStyle(nameInput);
-                    isValid = false;
-                } else {
-                    removeErrorStyle(nameInput);
-                }
+                // 验证输入
+                const errors = validateInput(name, content);
                 
-                if (!content) {
-                    addErrorStyle(contentTextarea);
-                    isValid = false;
-                } else {
-                    removeErrorStyle(contentTextarea);
-                }
-                
-                if (!isValid) {
+                if (errors.length > 0) {
+                    // 标红错误字段
+                    if (!name || name.trim() === '') {
+                        addErrorStyle(nameInput);
+                    } else {
+                        removeErrorStyle(nameInput);
+                    }
+                    
+                    if (!content || content.trim() === '') {
+                        addErrorStyle(contentTextarea);
+                    } else {
+                        removeErrorStyle(contentTextarea);
+                    }
+                    
+                    // 显示错误信息气泡
+                    showErrorBubble(errors[0]);
+                    
                     return;
                 }
                 
+                // 清理输入
+                const sanitizedName = sanitizeInput(name);
+                const sanitizedContent = sanitizeInput(content);
+                
                 // 调用API提交留言
-                submitMessage(name, content)
+                submitMessage(sanitizedName, sanitizedContent)
                     .then(() => {
                         // 成功后清空表单
                         nameInput.value = '';
@@ -330,28 +437,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         charCount.textContent = `0/${maxLength}`;
                         
                         // 显示新留言 - 直接在body中显示
-                        displayMessage(name, content);
+                        displayMessage(sanitizedName, sanitizedContent);
                     })
                     .catch(error => {
                         console.error('提交失败:', error);
                         // 提交失败时也标红输入框
                         addErrorStyle(nameInput);
                         addErrorStyle(contentTextarea);
-                        // 可以考虑添加一个临时的错误提示元素
-                        const errorMsg = document.createElement('div');
-                        errorMsg.className = 'submit-error-message';
-                        errorMsg.textContent = '提交失败，请重试';
-                        errorMsg.style.color = '#ff0000';
-                        errorMsg.style.marginTop = '5px';
-                        errorMsg.style.fontSize = '0.9rem';
-                        submitButton.parentNode.appendChild(errorMsg);
-                        
-                        // 3秒后自动移除错误提示
-                        setTimeout(() => {
-                            if (errorMsg.parentNode) {
-                                errorMsg.parentNode.removeChild(errorMsg);
-                            }
-                        }, 3000);
+                        // 显示错误信息气泡
+                        showErrorBubble('提交失败，请重试');
                     });
             });
         } else {

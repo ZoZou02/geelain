@@ -246,6 +246,7 @@ header {
 
 .message-form {
     margin-top: 0;
+    position: relative;
 }
 
 .message-form-row {
@@ -299,26 +300,65 @@ header {
 
 /* 错误输入框样式 */
 .error-input {
-    border-color: #ff0000 !important;
-    background-color: rgba(255, 0, 0, 0.1) !important;
-    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4) !important;
+    border-color: #fd2d5c !important;
+    background-color: rgba(253, 45, 92, 0.1) !important;
     transition: all 0.3s ease;
 }
 
 /* 确保textarea也应用相同的错误样式 */
 textarea.error-input {
-    border-color: #ff0000 !important;
-    background-color: rgba(255, 0, 0, 0.1) !important;
-    box-shadow: 0 0 8px rgba(255, 0, 0, 0.4) !important;
+    border-color: #fd2d5c !important;
+    background-color: rgba(253, 45, 92, 0.1) !important;
 }
 
 /* 错误提示消息样式 */
 .submit-error-message {
-    color: #ff0000;
+    color: #fd2d5c;
     font-family: 'Pixel', monospace;
     font-size: 0.9rem;
     margin-top: 5px;
     animation: fadeIn 0.3s ease;
+}
+
+/* 错误信息气泡样式 */
+.error-bubble {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.9);
+    color: #fd2d5c;
+    padding: 8px 12px;
+    border: 2px solid #fd2d5c;
+    font-family: 'Pixel', monospace;
+    font-size: 0.85rem;
+    z-index: 100;
+    animation: bubble-appear 0.3s ease-out, bubble-fade 0.5s ease-in 2.5s forwards;
+    white-space: nowrap;
+    margin-bottom: 8px;
+}
+
+/* 气泡动画 */
+@keyframes bubble-appear {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes bubble-fade {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
 }
 
 @keyframes fadeIn {
