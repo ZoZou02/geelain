@@ -311,6 +311,21 @@ textarea.error-input {
     background-color: rgba(253, 45, 92, 0.1) !important;
 }
 
+/* 本地（离线）模式禁用样式：半透明+斜线纹理，表示无法交互 */
+.offline-disabled {
+    cursor: not-allowed !important;
+    opacity: 0.55;
+    background-image: repeating-linear-gradient(-45deg,
+        transparent 0, transparent 6px,
+        rgba(253, 45, 92, 0.18) 6px, rgba(253, 45, 92, 0.18) 12px) !important;
+}
+
+.offline-disabled:hover {
+    transform: none;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+
 /* 错误提示消息样式 */
 .submit-error-message {
     color: #fd2d5c;

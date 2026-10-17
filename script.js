@@ -1,8 +1,9 @@
 // 导入配置
 import COUNTER_CONFIG from './counter_config.js';
+import OFFLINE_MESSAGES from './offline_messages.js';
 
 // 当前网站版本号 - 与HTML中的脚本版本号同步
-const CURRENT_VERSION = '3.0.1';
+const CURRENT_VERSION = '3.4.3';
 
 // 检查并处理版本更新
 function checkForUpdates() {
@@ -117,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!timerContainer.querySelector('.return-image')) {
                         // 创建a标签作为点击跳转的容器
                         const returnLink = document.createElement('a');
-                        returnLink.href = 'http://8.148.253.91/files/index.html';
+                        returnLink.href = 'https://www.zozou.top/geeturn';
                         
                         // 设置为绝对定位，覆盖在时间上，使用vw单位调整大小
                         returnLink.style.position = 'absolute';
@@ -330,6 +331,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // 设置输入框最大长度
         if (nameInput) nameInput.maxLength = maxNameLength;
         if (contentTextarea) contentTextarea.maxLength = maxLength;
+
+        // 本地模式下禁用留言输入区（与mode绑定，切回api模式时元素保持默认可交互）
+        if (COUNTER_CONFIG.mode === 'local' && nameInput && contentTextarea && submitButton) {
+            [nameInput, contentTextarea, submitButton].forEach(el => {
+                el.disabled = true;
+                el.classList.add('offline-disabled');
+            });
+        }
         
         // 字符计数功能
         if (contentTextarea && charCount) {
@@ -427,7 +436,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 清理输入
                 const sanitizedName = sanitizeInput(name);
                 const sanitizedContent = sanitizeInput(content);
-                
+
+                // 本地模式下不调用提交API，仅提示（输入框已禁用，此处为兜底）
+                if (COUNTER_CONFIG.mode === 'local') {
+                    showErrorBubble(COUNTER_CONFIG.messageSystem.offline?.notice || '离线模式，留言功能暂不可用');
+                    return;
+                }
+
                 // 调用API提交留言
                 submitMessage(sanitizedName, sanitizedContent)
                     .then(() => {
@@ -511,8 +526,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    // 获取离线留言数据（按页切片，结构与API响应一致）
+    function getOfflineMessages(page = 1, pageSize = PAGE_SIZE) {
+        const messages = OFFLINE_MESSAGES.messages || [];
+        const total = OFFLINE_MESSAGES.total || messages.length;
+        const start = (page - 1) * pageSize;
+        return {
+            messages: messages.slice(start, start + pageSize),
+            total: total,
+            page: page,
+            pageSize: pageSize,
+            totalPages: Math.ceil(total / pageSize)
+        };
+    }
+
     // 从API获取留言 - 带频率限制、缓存和分页支持
     function fetchMessagesFromApi(page = 1, pageSize = PAGE_SIZE) {
+        // 本地模式：直接返回离线留言数据，不请求API
+        if (COUNTER_CONFIG.mode === 'local') {
+            return Promise.resolve(getOfflineMessages(page, pageSize));
+        }
+
         const { api, fetchLimit } = COUNTER_CONFIG.messageSystem;
         const { baseUrl, getAction } = api;
         
@@ -611,7 +645,8 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('获取留言失败:', error);
-                return { messages: [], total: 0, page: page, pageSize: pageSize, totalPages: 0 };
+                // API不可用时回退到离线留言数据
+                return getOfflineMessages(page, pageSize);
             });
     }
     

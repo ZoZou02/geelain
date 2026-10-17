@@ -13,7 +13,7 @@ const checkFirstVisit = () => {
         
         // 延迟重定向，确保页面有时间加载
         setTimeout(() => {
-            window.location.href = 'http://8.148.253.91/files/index.html';
+            // window.location.href = 'http://8.148.253.91/files/index.html';
         }, 100);
     }
 };

@@ -1,8 +1,9 @@
 // 全局计数配置
 // 通过 URL 可用 ?mode=local 或 ?mode=api 覆盖默认模式
 const COUNTER_CONFIG = {
-    // 默认运行模式：api 为真实接口
-    mode: 'api',
+    // 默认运行模式：api 为真实接口；'local' 为离线模式（不请求API、不跳503页，留言输入区禁用）
+    // 留言弹幕、提交、计数器的离线/在线行为均随本开关切换，改回 'api' 即恢复正常API调用
+    mode: 'local',
 
     // 本地定时刷新间隔（毫秒）
     autoUpdateInterval: 15000,
@@ -91,6 +92,11 @@ const COUNTER_CONFIG = {
     
     // 留言功能配置
     messageSystem: {
+        // 离线提示文案（离线行为统一由顶部 mode 开关控制：'local' 为离线，'api' 为在线）
+        offline: {
+            notice: '离线模式，留言功能暂不可用'
+        },
+
         // 留言API配置
         api: {
             baseUrl: 'https://apizozou.top/api/message',

@@ -1,6 +1,7 @@
 // 计数器功能模块
 // 导入配置
 import COUNTER_CONFIG from './counter_config.js';
+import OFFLINE_MESSAGES from './offline_messages.js';
 
 // 等待DOM加载完成
 document.addEventListener('DOMContentLoaded', function() {
@@ -82,8 +83,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error(`[API模式] 访问计数器获取失败: ${err.message}`);
                 });
         } else {
-            // 本地模式：不显示模拟数据，显示0
-            updateViewCounterDisplay(0);
+            // 本地模式：显示离线数据中的访问计数
+            updateViewCounterDisplay(OFFLINE_MESSAGES.counters?.views ?? 0);
         }
     }
     
@@ -162,10 +163,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 加载本地测试模式的计数器数据
     function loadLocalCounters() {
-        // 本地模式：使用本地存储的点击数 + 基础计数 + 模拟的其他用户点击
+        // 本地模式：使用离线数据中的基础计数 + 本地存储的点击数 + 模拟的其他用户点击
+        const offlineCounters = OFFLINE_MESSAGES.counters || {};
         const simulatedOtherUsers = Math.floor(Math.random() * CONFIG.local.randomVariation);
-        const primaryCount = CONFIG.local.primaryBaseCount + localClickCount + simulatedOtherUsers;
-        const secondaryCount = CONFIG.local.secondaryBaseCount + localSecondaryCount;
+        const primaryCount = (offlineCounters.primary ?? CONFIG.local.primaryBaseCount) + localClickCount + simulatedOtherUsers;
+        const secondaryCount = (offlineCounters.secondary ?? CONFIG.local.secondaryBaseCount) + localSecondaryCount;
         const thresholdUnit = CONFIG.primaryCounter.resetThreshold || 1000000000;
 
         // 总能量 = 主计数 + 次计数 * 阈值单位
